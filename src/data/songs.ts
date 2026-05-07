@@ -1,0 +1,36 @@
+export interface Song {
+  id: number;
+  year: number;
+  genre: "K-POP" | "국내 발라드" | "국내 알앤비" | "국내 힙합";
+  title: string;
+  artist: string;
+  youtubeUrl: string;
+}
+
+export const SONGS: Song[] = [
+  { id: 1,  year: 2010, genre: "K-POP",       title: "Bad Girl Good Girl", artist: "미스에이", youtubeUrl: "https://www.youtube.com/results?search_query=miss+a+bad+girl+good+girl" },
+  { id: 2,  year: 2011, genre: "국내 발라드", title: "잊지말아요",         artist: "백지영",   youtubeUrl: "https://www.youtube.com/results?search_query=백지영+잊지말아요" },
+  { id: 3,  year: 2012, genre: "K-POP",       title: "강남스타일",         artist: "PSY",      youtubeUrl: "https://www.youtube.com/results?search_query=psy+gangnam+style" },
+  { id: 4,  year: 2013, genre: "국내 힙합",   title: "0(영)",              artist: "타이거JK", youtubeUrl: "https://www.youtube.com/results?search_query=타이거jk+0+영" },
+  { id: 5,  year: 2014, genre: "국내 알앤비", title: "썸",                 artist: "소유x정기고", youtubeUrl: "https://www.youtube.com/results?search_query=소유+정기고+썸" },
+  { id: 6,  year: 2015, genre: "K-POP",       title: "뱅뱅뱅",             artist: "BIGBANG",  youtubeUrl: "https://www.youtube.com/results?search_query=빅뱅+뱅뱅뱅" },
+  { id: 7,  year: 2016, genre: "국내 발라드", title: "이젠 잊기로 해요",   artist: "한동근",   youtubeUrl: "https://www.youtube.com/results?search_query=한동근+이젠+잊기로+해요" },
+  { id: 8,  year: 2017, genre: "K-POP",       title: "Knock Knock",        artist: "TWICE",    youtubeUrl: "https://www.youtube.com/results?search_query=twice+knock+knock" },
+  { id: 9,  year: 2018, genre: "K-POP",       title: "Love Scenario",      artist: "iKON",     youtubeUrl: "https://www.youtube.com/results?search_query=ikon+love+scenario" },
+  { id: 10, year: 2018, genre: "국내 힙합",   title: "shoong!",            artist: "더블랙스킬츠", youtubeUrl: "https://www.youtube.com/results?search_query=k+hip+hop+2018" },
+  { id: 11, year: 2019, genre: "국내 발라드", title: "사랑에 연습이 있었다면", artist: "임재현", youtubeUrl: "https://www.youtube.com/results?search_query=임재현+사랑에+연습이+있었다면" },
+  { id: 12, year: 2020, genre: "K-POP",       title: "Dynamite",           artist: "BTS",      youtubeUrl: "https://www.youtube.com/results?search_query=bts+dynamite" },
+  { id: 13, year: 2020, genre: "국내 알앤비", title: "헤어지자 말해요",    artist: "박재정",   youtubeUrl: "https://www.youtube.com/results?search_query=박재정+헤어지자+말해요" },
+  { id: 14, year: 2021, genre: "K-POP",       title: "Next Level",         artist: "aespa",    youtubeUrl: "https://www.youtube.com/results?search_query=aespa+next+level" },
+  { id: 15, year: 2021, genre: "국내 힙합",   title: "Gemini",             artist: "릴러말즈", youtubeUrl: "https://www.youtube.com/results?search_query=릴러말즈+gemini" },
+  { id: 16, year: 2022, genre: "K-POP",       title: "After LIKE",         artist: "IVE",      youtubeUrl: "https://www.youtube.com/results?search_query=ive+after+like" },
+  { id: 17, year: 2022, genre: "국내 발라드", title: "사건의 지평선",      artist: "윤하",     youtubeUrl: "https://www.youtube.com/results?search_query=윤하+사건의+지평선" },
+  { id: 18, year: 2023, genre: "K-POP",       title: "Super Shy",          artist: "NewJeans", youtubeUrl: "https://www.youtube.com/results?search_query=newjeans+super+shy" },
+  { id: 19, year: 2023, genre: "국내 알앤비", title: "라일락",             artist: "아이유",   youtubeUrl: "https://www.youtube.com/results?search_query=아이유+라일락" },
+  { id: 20, year: 2024, genre: "K-POP",       title: "Magnetic",           artist: "ILLIT",    youtubeUrl: "https://www.youtube.com/results?search_query=illit+magnetic" },
+  { id: 21, year: 2024, genre: "국내 힙합",   title: "Home Sweet Home",    artist: "G-DRAGON", youtubeUrl: "https://www.youtube.com/results?search_query=gdragon+home+sweet+home" },
+  { id: 22, year: 2024, genre: "국내 발라드", title: "소나기",             artist: "이클립스", youtubeUrl: "https://www.youtube.com/results?search_query=이클립스+소나기" },
+  { id: 23, year: 2025, genre: "K-POP",       title: "Whiplash",           artist: "aespa",    youtubeUrl: "https://www.youtube.com/results?search_query=aespa+whiplash" },
+  { id: 24, year: 2025, genre: "국내 알앤비", title: "Drowning",           artist: "WOODZ",    youtubeUrl: "https://www.youtube.com/results?search_query=woodz+drowning" },
+  { id: 25, year: 2026, genre: "K-POP",       title: "신곡 (예시)",        artist: "신인 그룹", youtubeUrl: "https://www.youtube.com/results?search_query=kpop+2026" },
+];
