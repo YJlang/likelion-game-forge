@@ -9,8 +9,50 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TruthlieRouteImport } from './routes/truthlie'
+import { Route as SingingRouteImport } from './routes/singing'
+import { Route as ScoreboardRouteImport } from './routes/scoreboard'
+import { Route as ReactionRouteImport } from './routes/reaction'
+import { Route as JukeboxRouteImport } from './routes/jukebox'
+import { Route as FinalRouteImport } from './routes/final'
+import { Route as CharadesRouteImport } from './routes/charades'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TruthlieRoute = TruthlieRouteImport.update({
+  id: '/truthlie',
+  path: '/truthlie',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SingingRoute = SingingRouteImport.update({
+  id: '/singing',
+  path: '/singing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScoreboardRoute = ScoreboardRouteImport.update({
+  id: '/scoreboard',
+  path: '/scoreboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReactionRoute = ReactionRouteImport.update({
+  id: '/reaction',
+  path: '/reaction',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JukeboxRoute = JukeboxRouteImport.update({
+  id: '/jukebox',
+  path: '/jukebox',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FinalRoute = FinalRouteImport.update({
+  id: '/final',
+  path: '/final',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CharadesRoute = CharadesRouteImport.update({
+  id: '/charades',
+  path: '/charades',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +61,130 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/charades': typeof CharadesRoute
+  '/final': typeof FinalRoute
+  '/jukebox': typeof JukeboxRoute
+  '/reaction': typeof ReactionRoute
+  '/scoreboard': typeof ScoreboardRoute
+  '/singing': typeof SingingRoute
+  '/truthlie': typeof TruthlieRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/charades': typeof CharadesRoute
+  '/final': typeof FinalRoute
+  '/jukebox': typeof JukeboxRoute
+  '/reaction': typeof ReactionRoute
+  '/scoreboard': typeof ScoreboardRoute
+  '/singing': typeof SingingRoute
+  '/truthlie': typeof TruthlieRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/charades': typeof CharadesRoute
+  '/final': typeof FinalRoute
+  '/jukebox': typeof JukeboxRoute
+  '/reaction': typeof ReactionRoute
+  '/scoreboard': typeof ScoreboardRoute
+  '/singing': typeof SingingRoute
+  '/truthlie': typeof TruthlieRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/charades'
+    | '/final'
+    | '/jukebox'
+    | '/reaction'
+    | '/scoreboard'
+    | '/singing'
+    | '/truthlie'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/charades'
+    | '/final'
+    | '/jukebox'
+    | '/reaction'
+    | '/scoreboard'
+    | '/singing'
+    | '/truthlie'
+  id:
+    | '__root__'
+    | '/'
+    | '/charades'
+    | '/final'
+    | '/jukebox'
+    | '/reaction'
+    | '/scoreboard'
+    | '/singing'
+    | '/truthlie'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CharadesRoute: typeof CharadesRoute
+  FinalRoute: typeof FinalRoute
+  JukeboxRoute: typeof JukeboxRoute
+  ReactionRoute: typeof ReactionRoute
+  ScoreboardRoute: typeof ScoreboardRoute
+  SingingRoute: typeof SingingRoute
+  TruthlieRoute: typeof TruthlieRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/truthlie': {
+      id: '/truthlie'
+      path: '/truthlie'
+      fullPath: '/truthlie'
+      preLoaderRoute: typeof TruthlieRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/singing': {
+      id: '/singing'
+      path: '/singing'
+      fullPath: '/singing'
+      preLoaderRoute: typeof SingingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scoreboard': {
+      id: '/scoreboard'
+      path: '/scoreboard'
+      fullPath: '/scoreboard'
+      preLoaderRoute: typeof ScoreboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reaction': {
+      id: '/reaction'
+      path: '/reaction'
+      fullPath: '/reaction'
+      preLoaderRoute: typeof ReactionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jukebox': {
+      id: '/jukebox'
+      path: '/jukebox'
+      fullPath: '/jukebox'
+      preLoaderRoute: typeof JukeboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/final': {
+      id: '/final'
+      path: '/final'
+      fullPath: '/final'
+      preLoaderRoute: typeof FinalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/charades': {
+      id: '/charades'
+      path: '/charades'
+      fullPath: '/charades'
+      preLoaderRoute: typeof CharadesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,17 +197,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CharadesRoute: CharadesRoute,
+  FinalRoute: FinalRoute,
+  JukeboxRoute: JukeboxRoute,
+  ReactionRoute: ReactionRoute,
+  ScoreboardRoute: ScoreboardRoute,
+  SingingRoute: SingingRoute,
+  TruthlieRoute: TruthlieRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
