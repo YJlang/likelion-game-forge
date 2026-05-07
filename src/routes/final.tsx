@@ -17,11 +17,13 @@ export const Route = createFileRoute("/final")({
 });
 
 function fireBigConfetti() {
-  const end = Date.now() + 4 * 1000;
-  const colors = ["#F97316", "#FACC15", "#22C55E", "#EF4444", "#FFFFFF"];
+  const end = Date.now() + 6 * 1000;
+  const colors = ["#F97316", "#FACC15", "#22C55E", "#EF4444", "#FFFFFF", "#A855F7"];
+  // Initial big burst
+  confetti({ particleCount: 200, spread: 160, origin: { y: 0.5 }, colors, startVelocity: 55 });
   (function frame() {
-    confetti({ particleCount: 6, angle: 60, spread: 80, origin: { x: 0, y: 0.7 }, colors });
-    confetti({ particleCount: 6, angle: 120, spread: 80, origin: { x: 1, y: 0.7 }, colors });
+    confetti({ particleCount: 8, angle: 60, spread: 90, origin: { x: 0, y: 0.7 }, colors });
+    confetti({ particleCount: 8, angle: 120, spread: 90, origin: { x: 1, y: 0.7 }, colors });
     if (Date.now() < end) requestAnimationFrame(frame);
   })();
 }
