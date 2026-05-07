@@ -25,7 +25,7 @@ function TruthLie() {
   const [counts, setCounts] = useState<Record<TeamId, number>>({ team1: 0, team2: 0, team3: 0, team4: 0 });
 
   const remaining = useMemo(() => TRUTH_LIES.filter((q) => !used.includes(q.id)), [used]);
-  const [current, setCurrent] = useState(remaining[0] ?? null);
+  const [current, setCurrent] = useState<typeof TRUTH_LIES[number] | null>(null);
 
   const draw = () => {
     const pool = TRUTH_LIES.filter((q) => !used.includes(q.id));
@@ -53,7 +53,9 @@ function TruthLie() {
       <GameHeader
         title="게임3. 운영진 진실/거짓"
         subtitle="문장이 진실인지 거짓인지 맞춰보세요!"
-        badge={<span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold">🤔 게임 3</span>}
+        badge={<span className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-bold">🤔 게임 3</span>}
+        steps={["문제 뽑기", "팀별 정답 체크", "정답 공개", "다음 문제"]}
+        currentStep={!current ? 0 : !revealed ? 1 : 2}
         rules={
           <ul className="list-disc pl-5 space-y-1">
             <li>운영진에 대한 문장이 나옵니다.</li>
@@ -73,16 +75,18 @@ function TruthLie() {
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <BigButton size="lg" onClick={draw}>🎰 다음 문제 뽑기</BigButton>
-        </div>
+        <BigButton size="xl" className="w-full animate-pulse-glow" onClick={draw}>🎰 다음 문제 뽑기</BigButton>
 
         <AnimatePresence mode="wait">
           {current && (
-            <motion.div key={current.id} initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-              className="rounded-2xl border-2 border-primary bg-background/50 p-8 text-center">
-              <div className="font-display text-3xl text-primary">{current.person}</div>
-              <div className="font-display text-4xl md:text-6xl mt-4 leading-tight">"{current.statement}"</div>
+            <motion.div key={current.id}
+              initial={{ scale: 0.6, opacity: 0, rotate: -3 }}
+              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 220, damping: 16 }}
+              className="rounded-2xl border-2 border-primary glow-primary bg-background/50 p-8 text-center">
+              <div className="font-display text-4xl text-primary">{current.person}</div>
+              <div className="font-display text-5xl md:text-7xl mt-4 leading-tight" style={{ textShadow: "0 0 30px rgba(249,115,22,0.4)" }}>"{current.statement}"</div>
               <div className="mt-6 flex flex-wrap gap-3 justify-center">
                 <BigButton size="lg" variant={revealed ? "ghost" : "accent"} onClick={() => setRevealed((r) => !r)}>
                   {revealed ? "🙈 정답 숨기기" : "👀 정답 공개"}

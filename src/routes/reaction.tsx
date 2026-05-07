@@ -58,7 +58,9 @@ function Reaction() {
       <GameHeader
         title="게임4. 반응으로 행동 맞추기"
         subtitle="환호와 야유만으로 행동을 추측합니다!"
-        badge={<span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold">🎭 게임 4</span>}
+        badge={<span className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-bold">🎭 게임 4</span>}
+        steps={["팀/추측자 선정", "주제 뽑기", "성공/실패 입력"]}
+        currentStep={!team ? 0 : !current ? 1 : 2}
         rules={
           <ul className="list-disc pl-5 space-y-1">
             <li>한 명을 추측자로 선정, 나머지는 주제 확인.</li>
@@ -98,16 +100,24 @@ function Reaction() {
 
           <AnimatePresence mode="wait">
             {current && (
-              <motion.div key={current.id} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-                className="rounded-2xl border-2 border-primary bg-background/50 p-6 text-center">
-                <div className="text-xs text-muted-foreground">난이도 {current.difficulty}</div>
+              <motion.div
+                key={current.id}
+                initial={{ scale: 0.5, opacity: 0, rotate: -4 }}
+                animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 220, damping: 16 }}
+                className="rounded-2xl border-2 border-primary glow-primary bg-background/50 p-6 text-center"
+              >
+                <div className="text-sm text-muted-foreground font-bold uppercase tracking-widest">난이도 {current.difficulty}</div>
                 {revealed ? (
-                  <div className="font-display text-3xl md:text-5xl text-accent mt-2">{current.action}</div>
+                  <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                    className="font-display text-4xl md:text-6xl text-accent mt-3" style={{ textShadow: "0 0 30px var(--accent)" }}>
+                    {current.action}
+                  </motion.div>
                 ) : (
-                  <div className="font-display text-5xl text-muted-foreground mt-2">● ● ● ● ●</div>
+                  <div className="font-display text-6xl text-muted-foreground/40 mt-3 tracking-widest">● ● ● ● ●</div>
                 )}
-                <BigButton className="mt-4" variant={revealed ? "ghost" : "accent"} onClick={() => setRevealed((r) => !r)}>
-                  {revealed ? "🙈 주제 숨기기" : "👀 주제 보기 (운영진만)"}
+                <BigButton size="lg" className="mt-5" variant={revealed ? "ghost" : "accent"} onClick={() => setRevealed((r) => !r)}>
+                  {revealed ? "🙈 주제 숨기기" : "👀 주제 공개 (운영진만)"}
                 </BigButton>
               </motion.div>
             )}
@@ -128,14 +138,14 @@ function Reaction() {
             return (
               <div key={t.id} className="rounded-xl bg-background/50 p-4">
                 <div className="text-sm" style={{ color: `var(--${t.colorVar})` }}>{t.emoji} {t.name}</div>
-                <div className={`font-display text-3xl mt-1 ${r.ok ? "text-success" : r.sec === null ? "text-muted-foreground" : "text-destructive"}`}>
-                  {r.ok ? `${r.sec}s` : r.sec === null && r === results[t.id] && results[t.id].sec === null && !results[t.id].ok ? "—" : "실패"}
+                <div className={`font-display text-3xl mt-1 tabular-nums ${r.ok ? "text-success" : r.sec === null ? "text-muted-foreground" : "text-destructive"}`}>
+                  {r.ok ? `${r.sec}s` : r.sec === null ? "—" : "실패"}
                 </div>
               </div>
             );
           })}
         </div>
-        <p className="text-xs text-muted-foreground mt-3">추측자: {guesser || "—"}</p>
+        <p className="text-sm text-muted-foreground mt-3">추측자: <span className="font-bold text-foreground">{guesser || "—"}</span></p>
       </div>
 
       <ResultsPanel game="reaction" />

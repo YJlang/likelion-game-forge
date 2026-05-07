@@ -85,7 +85,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <main className="flex-1 mx-auto max-w-[1600px] w-full px-6 py-8 md:py-12">
+        <main className="flex-1 mx-auto max-w-[1600px] w-full px-6 py-8 md:py-12 md:pr-[300px]">
           <Outlet />
         </main>
         <MiniScoreDock />
