@@ -20,7 +20,11 @@ export function GameHeader({ title, subtitle, rules, badge, steps, currentStep =
           <h1 className="text-display text-6xl md:text-8xl text-foreground drop-shadow-[0_4px_20px_rgba(249,115,22,0.35)]">
             {title}
           </h1>
-          {subtitle && <p className="text-muted-foreground text-xl md:text-2xl mt-3 font-semibold">{subtitle}</p>}
+          {subtitle && (
+            <p className="text-muted-foreground text-xl md:text-2xl mt-3 font-semibold">
+              {subtitle}
+            </p>
+          )}
         </div>
         {rules && (
           <button
@@ -44,13 +48,11 @@ export function GameHeader({ title, subtitle, rules, badge, steps, currentStep =
                   active
                     ? "border-primary bg-primary/15 text-primary scale-105"
                     : done
-                    ? "border-success/60 bg-success/10 text-success"
-                    : "border-border bg-card text-muted-foreground"
+                      ? "border-success/60 bg-success/10 text-success"
+                      : "border-border bg-card text-muted-foreground"
                 }`}
               >
-                <span className="font-display text-base w-5 text-center">
-                  {done ? "✓" : i + 1}
-                </span>
+                <span className="font-display text-base w-5 text-center">{done ? "✓" : i + 1}</span>
                 <span>{s}</span>
               </div>
             );

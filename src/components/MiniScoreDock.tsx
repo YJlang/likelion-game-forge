@@ -34,7 +34,8 @@ export function MiniScoreDock() {
                     style={{ background: `var(--${t.colorVar})` }}
                   />
                   <span className={`truncate font-bold text-sm ${i === 0 ? "text-accent" : ""}`}>
-                    {i === 0 && "👑 "}{t.name}
+                    {i === 0 && "👑 "}
+                    {t.name}
                   </span>
                 </div>
                 <motion.span

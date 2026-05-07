@@ -64,8 +64,16 @@ function Final() {
 
       <AnimatePresence mode="wait">
         {phase === "idle" && (
-          <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center space-y-8 py-10">
-            <div className="text-display text-6xl md:text-8xl text-primary animate-shake">두구두구두구...</div>
+          <motion.div
+            key="idle"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-center space-y-8 py-10"
+          >
+            <div className="text-display text-6xl md:text-8xl text-primary animate-shake">
+              두구두구두구...
+            </div>
             <div className="text-muted-foreground text-lg">준비되면 결과를 공개하세요</div>
             <BigButton size="xl" onClick={start} className="animate-pulse-glow">
               🎉 결과 공개!
@@ -95,7 +103,12 @@ function Final() {
         )}
 
         {phase === "reveal" && (
-          <motion.div key="rv" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="space-y-10">
+          <motion.div
+            key="rv"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-10"
+          >
             {/* WINNER */}
             <motion.div
               initial={{ scale: 0.3, rotate: -10, opacity: 0 }}
@@ -107,7 +120,9 @@ function Final() {
                 animate={{ opacity: [0.3, 0.6, 0.3] }}
                 transition={{ duration: 2, repeat: Infinity }}
                 className="absolute inset-0 pointer-events-none"
-                style={{ background: `radial-gradient(circle, var(--${winner.colorVar}), transparent 70%)` }}
+                style={{
+                  background: `radial-gradient(circle, var(--${winner.colorVar}), transparent 70%)`,
+                }}
               />
               {/* Spinning rays */}
               <motion.div
@@ -115,7 +130,8 @@ function Final() {
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                 className="absolute inset-0 pointer-events-none opacity-20"
                 style={{
-                  background: "conic-gradient(from 0deg, transparent 0deg, var(--accent) 30deg, transparent 60deg, transparent 180deg, var(--accent) 210deg, transparent 240deg)",
+                  background:
+                    "conic-gradient(from 0deg, transparent 0deg, var(--accent) 30deg, transparent 60deg, transparent 180deg, var(--accent) 210deg, transparent 240deg)",
                 }}
               />
               <div className="relative">
@@ -136,7 +152,10 @@ function Final() {
                 >
                   {winner.emoji} {winner.name}
                 </motion.div>
-                <div className="font-display text-4xl mt-6" style={{ color: `var(--${winner.colorVar})` }}>
+                <div
+                  className="font-display text-4xl mt-6"
+                  style={{ color: `var(--${winner.colorVar})` }}
+                >
                   팀장 {winner.leader}
                 </div>
                 <div className="mt-2 text-xl text-foreground/80">{winner.members.join(" · ")}</div>
@@ -163,7 +182,9 @@ function Final() {
                   className="rounded-2xl bg-card border border-border p-6"
                 >
                   <div className="font-display text-2xl text-muted-foreground">{i + 2}위</div>
-                  <div className="font-display text-3xl mt-1">{t.emoji} {t.name}</div>
+                  <div className="font-display text-3xl mt-1">
+                    {t.emoji} {t.name}
+                  </div>
                   <div style={{ color: `var(--${t.colorVar})` }}>{t.leader}</div>
                   <div className="mt-2 font-display text-4xl tabular-nums">{scores[t.id]}</div>
                 </motion.div>
@@ -180,9 +201,14 @@ function Final() {
                   {mvpLog.map((m) => {
                     const t = TEAMS.find((x) => x.id === m.team)!;
                     return (
-                      <li key={m.id} className="flex items-center justify-between gap-3 border-b border-border pb-2">
+                      <li
+                        key={m.id}
+                        className="flex items-center justify-between gap-3 border-b border-border pb-2"
+                      >
                         <span className="text-muted-foreground text-sm">{GAME_LABEL[m.game]}</span>
-                        <span className="font-bold">{t.emoji} {t.name} {m.player ? `· ${m.player}` : ""}</span>
+                        <span className="font-bold">
+                          {t.emoji} {t.name} {m.player ? `· ${m.player}` : ""}
+                        </span>
                       </li>
                     );
                   })}
@@ -191,8 +217,16 @@ function Final() {
             </div>
 
             <div className="text-center pt-6">
-              <p className="font-display text-4xl md:text-6xl text-primary">모두 수고하셨습니다! 🦁</p>
-              <BigButton variant="ghost" className="mt-6" onClick={() => { setPhase("idle"); }}>
+              <p className="font-display text-4xl md:text-6xl text-primary">
+                모두 수고하셨습니다! 🦁
+              </p>
+              <BigButton
+                variant="ghost"
+                className="mt-6"
+                onClick={() => {
+                  setPhase("idle");
+                }}
+              >
                 다시 발표
               </BigButton>
             </div>

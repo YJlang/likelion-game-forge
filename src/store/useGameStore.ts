@@ -14,6 +14,7 @@ export const GAME_LABEL: Record<GameKey, string> = {
 
 export interface ScoreLogEntry {
   id: string;
+  batchId?: string;
   game: GameKey | "manual";
   team: TeamId;
   delta: number;
@@ -23,6 +24,7 @@ export interface ScoreLogEntry {
 
 export interface MvpLogEntry {
   id: string;
+  scoreBatchId?: string;
   game: GameKey;
   team: TeamId;
   player?: string;
@@ -41,18 +43,25 @@ interface State {
 }
 
 interface Actions {
-  applyScores: (game: GameKey | "manual", entries: { team: TeamId; delta: number; reason: string }[]) => void;
-  addMvp: (game: GameKey, team: TeamId, player?: string) => void;
+  applyScores: (
+    game: GameKey | "manual",
+    entries: { team: TeamId; delta: number; reason: string }[],
+  ) => string;
+  addMvp: (game: GameKey, team: TeamId, player?: string, scoreBatchId?: string) => void;
   markUsed: (kind: "song" | "charade" | "reaction" | "truth", id: number) => void;
   resetUsed: (kind: "song" | "charade" | "reaction" | "truth") => void;
   resetAll: () => void;
   manualAdjust: (team: TeamId, delta: number, reason: string) => void;
+  undoLastScoreBatch: () => boolean;
 }
 
-const initialScores = TEAMS.reduce((acc, t) => {
-  acc[t.id] = 0;
-  return acc;
-}, {} as Record<TeamId, number>);
+const initialScores = TEAMS.reduce(
+  (acc, t) => {
+    acc[t.id] = 0;
+    return acc;
+  },
+  {} as Record<TeamId, number>,
+);
 
 const initial: State = {
   scores: { ...initialScores },
@@ -71,20 +80,31 @@ export const useGameStore = create<State & Actions>()(
   persist(
     (set) => ({
       ...initial,
-      applyScores: (game, entries) =>
+      applyScores: (game, entries) => {
+        const batchId = uid();
         set((s) => {
           const scores = { ...s.scores };
           const log = [...s.scoreLog];
           const at = Date.now();
           for (const e of entries) {
             scores[e.team] = (scores[e.team] ?? 0) + e.delta;
-            log.push({ id: uid(), game, team: e.team, delta: e.delta, reason: e.reason, at });
+            log.push({
+              id: uid(),
+              batchId,
+              game,
+              team: e.team,
+              delta: e.delta,
+              reason: e.reason,
+              at,
+            });
           }
           return { scores, scoreLog: log, lastSavedAt: at };
-        }),
-      addMvp: (game, team, player) =>
+        });
+        return batchId;
+      },
+      addMvp: (game, team, player, scoreBatchId) =>
         set((s) => ({
-          mvpLog: [...s.mvpLog, { id: uid(), game, team, player, at: Date.now() }],
+          mvpLog: [...s.mvpLog, { id: uid(), scoreBatchId, game, team, player, at: Date.now() }],
           lastSavedAt: Date.now(),
         })),
       markUsed: (kind, id) =>
@@ -114,15 +134,49 @@ export const useGameStore = create<State & Actions>()(
       manualAdjust: (team, delta, reason) =>
         set((s) => {
           const at = Date.now();
+          const batchId = uid();
           return {
             scores: { ...s.scores, [team]: (s.scores[team] ?? 0) + delta },
-            scoreLog: [...s.scoreLog, { id: uid(), game: "manual", team, delta, reason, at }],
+            scoreLog: [
+              ...s.scoreLog,
+              { id: uid(), batchId, game: "manual", team, delta, reason, at },
+            ],
             lastSavedAt: at,
           };
         }),
+      undoLastScoreBatch: () => {
+        let undone = false;
+        set((s) => {
+          const last = s.scoreLog.at(-1);
+          if (!last) return s;
+
+          const entries = last.batchId
+            ? s.scoreLog.filter((entry) => entry.batchId === last.batchId)
+            : s.scoreLog.filter((entry) => entry.at === last.at);
+
+          if (!entries.length) return s;
+
+          const entryIds = new Set(entries.map((entry) => entry.id));
+          const batchId = last.batchId;
+          const scores = { ...s.scores };
+
+          for (const entry of entries) {
+            scores[entry.team] = (scores[entry.team] ?? 0) - entry.delta;
+          }
+
+          undone = true;
+          return {
+            scores,
+            scoreLog: s.scoreLog.filter((entry) => !entryIds.has(entry.id)),
+            mvpLog: batchId ? s.mvpLog.filter((entry) => entry.scoreBatchId !== batchId) : s.mvpLog,
+            lastSavedAt: Date.now(),
+          };
+        });
+        return undone;
+      },
     }),
-    { name: "mt-likelion-v1" }
-  )
+    { name: "mt-likelion-v1" },
+  ),
 );
 
 export const REGULAR_POINTS = [4, 3, 2, 1];

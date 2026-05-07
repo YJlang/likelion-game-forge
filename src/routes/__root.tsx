@@ -19,7 +19,10 @@ function NotFoundComponent() {
       <div className="text-center">
         <h1 className="text-display text-9xl text-primary">404</h1>
         <p className="mt-4 text-xl">존재하지 않는 페이지예요</p>
-        <Link to="/" className="inline-block mt-6 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold">
+        <Link
+          to="/"
+          className="inline-block mt-6 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold"
+        >
           홈으로
         </Link>
       </div>
@@ -36,7 +39,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <h1 className="font-display text-4xl">앗! 문제가 발생했어요</h1>
         <p className="mt-2 text-muted-foreground">{error.message}</p>
         <button
-          onClick={() => { router.invalidate(); reset(); }}
+          onClick={() => {
+            router.invalidate();
+            reset();
+          }}
           className="mt-6 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold"
         >
           다시 시도

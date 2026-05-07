@@ -30,7 +30,9 @@ export function Navbar() {
                 className:
                   "bg-primary text-primary-foreground shadow-[0_0_20px_-5px_var(--primary)]",
               }}
-              inactiveProps={{ className: "text-muted-foreground hover:text-foreground hover:bg-card" }}
+              inactiveProps={{
+                className: "text-muted-foreground hover:text-foreground hover:bg-card",
+              }}
               className="px-3 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all flex items-center gap-1.5"
             >
               <span>{it.emoji}</span>

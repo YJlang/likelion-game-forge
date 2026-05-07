@@ -77,7 +77,9 @@ export function Timer({ durationSec, onComplete, size = "xl" }: Props) {
         <BigButton size="lg" onClick={toggle} variant={running ? "accent" : "primary"}>
           {running ? "⏸ 일시정지" : "▶ 시작"}
         </BigButton>
-        <BigButton size="lg" variant="ghost" onClick={reset}>↺ 리셋</BigButton>
+        <BigButton size="lg" variant="ghost" onClick={reset}>
+          ↺ 리셋
+        </BigButton>
       </div>
     </div>
   );

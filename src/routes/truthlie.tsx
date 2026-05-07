@@ -21,17 +21,29 @@ function TruthLie() {
 
   const [revealed, setRevealed] = useState(false);
   const [qNum, setQNum] = useState(1);
-  const [correct, setCorrect] = useState<Record<TeamId, boolean>>({ team1: false, team2: false, team3: false, team4: false });
-  const [counts, setCounts] = useState<Record<TeamId, number>>({ team1: 0, team2: 0, team3: 0, team4: 0 });
+  const [correct, setCorrect] = useState<Record<TeamId, boolean>>({
+    team1: false,
+    team2: false,
+    team3: false,
+    team4: false,
+  });
+  const [counts, setCounts] = useState<Record<TeamId, number>>({
+    team1: 0,
+    team2: 0,
+    team3: 0,
+    team4: 0,
+  });
 
   const remaining = useMemo(() => TRUTH_LIES.filter((q) => !used.includes(q.id)), [used]);
-  const [current, setCurrent] = useState<typeof TRUTH_LIES[number] | null>(null);
+  const [current, setCurrent] = useState<(typeof TRUTH_LIES)[number] | null>(null);
 
   const draw = () => {
     const pool = TRUTH_LIES.filter((q) => !used.includes(q.id));
     if (!pool.length) return toast.error("남은 문제가 없습니다.");
     const pick = pool[Math.floor(Math.random() * pool.length)];
-    setCurrent(pick); setRevealed(false); markUsed("truth", pick.id);
+    setCurrent(pick);
+    setRevealed(false);
+    markUsed("truth", pick.id);
     setCorrect({ team1: false, team2: false, team3: false, team4: false });
   };
 
@@ -53,7 +65,11 @@ function TruthLie() {
       <GameHeader
         title="게임3. 운영진 진실/거짓"
         subtitle="문장이 진실인지 거짓인지 맞춰보세요!"
-        badge={<span className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-bold">🤔 게임 3</span>}
+        badge={
+          <span className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-bold">
+            🤔 게임 3
+          </span>
+        }
         steps={["문제 뽑기", "팀별 정답 체크", "정답 공개", "다음 문제"]}
         currentStep={!current ? 0 : !revealed ? 1 : 2}
         rules={
@@ -70,33 +86,57 @@ function TruthLie() {
           <div className="text-sm uppercase tracking-widest text-muted-foreground font-bold">
             문제 {qNum} · 남은 {remaining.length}/{TRUTH_LIES.length}
           </div>
-          <button onClick={() => { resetUsed("truth"); toast.success("문제 풀 초기화"); }} className="text-xs text-muted-foreground underline">
+          <button
+            onClick={() => {
+              resetUsed("truth");
+              toast.success("문제 풀 초기화");
+            }}
+            className="text-xs text-muted-foreground underline"
+          >
             문제 초기화
           </button>
         </div>
 
-        <BigButton size="xl" className="w-full animate-pulse-glow" onClick={draw}>🎰 다음 문제 뽑기</BigButton>
+        <BigButton size="xl" className="w-full animate-pulse-glow" onClick={draw}>
+          🎰 다음 문제 뽑기
+        </BigButton>
 
         <AnimatePresence mode="wait">
           {current && (
-            <motion.div key={current.id}
+            <motion.div
+              key={current.id}
               initial={{ scale: 0.6, opacity: 0, rotate: -3 }}
               animate={{ scale: 1, opacity: 1, rotate: 0 }}
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: "spring", stiffness: 220, damping: 16 }}
-              className="rounded-2xl border-2 border-primary glow-primary bg-background/50 p-8 text-center">
+              className="rounded-2xl border-2 border-primary glow-primary bg-background/50 p-8 text-center"
+            >
               <div className="font-display text-4xl text-primary">{current.person}</div>
-              <div className="font-display text-5xl md:text-7xl mt-4 leading-tight" style={{ textShadow: "0 0 30px rgba(249,115,22,0.4)" }}>"{current.statement}"</div>
+              <div
+                className="font-display text-5xl md:text-7xl mt-4 leading-tight"
+                style={{ textShadow: "0 0 30px rgba(249,115,22,0.4)" }}
+              >
+                "{current.statement}"
+              </div>
               <div className="mt-6 flex flex-wrap gap-3 justify-center">
-                <BigButton size="lg" variant={revealed ? "ghost" : "accent"} onClick={() => setRevealed((r) => !r)}>
+                <BigButton
+                  size="lg"
+                  variant={revealed ? "ghost" : "accent"}
+                  onClick={() => setRevealed((r) => !r)}
+                >
                   {revealed ? "🙈 정답 숨기기" : "👀 정답 공개"}
                 </BigButton>
               </div>
               {revealed && (
-                <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
                   className={`mt-6 inline-block px-8 py-4 rounded-2xl font-display text-6xl ${
-                    current.answer === "진실" ? "bg-success text-success-foreground" : "bg-destructive text-destructive-foreground"
-                  }`}>
+                    current.answer === "진실"
+                      ? "bg-success text-success-foreground"
+                      : "bg-destructive text-destructive-foreground"
+                  }`}
+                >
                   {current.answer === "진실" ? "✅ 진실" : "❌ 거짓"}
                 </motion.div>
               )}
@@ -105,22 +145,32 @@ function TruthLie() {
         </AnimatePresence>
 
         <div>
-          <div className="text-sm font-bold text-muted-foreground mb-2 uppercase tracking-wider">팀별 정답 체크</div>
+          <div className="text-sm font-bold text-muted-foreground mb-2 uppercase tracking-wider">
+            팀별 정답 체크
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {TEAMS.map((t) => (
-              <button key={t.id}
+              <button
+                key={t.id}
                 onClick={() => setCorrect((c) => ({ ...c, [t.id]: !c[t.id] }))}
                 className={`p-4 rounded-xl border-2 transition-all text-left ${
                   correct[t.id] ? "border-success bg-success/10" : "border-border bg-card"
-                }`}>
-                <div className="text-sm" style={{ color: `var(--${t.colorVar})` }}>{t.emoji} {t.name}</div>
-                <div className="font-display text-2xl mt-1">{correct[t.id] ? "✅ 맞음" : "⬜ 미선택"}</div>
+                }`}
+              >
+                <div className="text-sm" style={{ color: `var(--${t.colorVar})` }}>
+                  {t.emoji} {t.name}
+                </div>
+                <div className="font-display text-2xl mt-1">
+                  {correct[t.id] ? "✅ 맞음" : "⬜ 미선택"}
+                </div>
               </button>
             ))}
           </div>
         </div>
 
-        <BigButton size="lg" className="w-full" onClick={next}>다음 문제로 →</BigButton>
+        <BigButton size="lg" className="w-full" onClick={next}>
+          다음 문제로 →
+        </BigButton>
       </div>
 
       <div className="rounded-3xl bg-card border border-border p-6">
@@ -128,7 +178,9 @@ function TruthLie() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {TEAMS.map((t) => (
             <div key={t.id} className="rounded-xl bg-background/50 p-4">
-              <div className="text-sm" style={{ color: `var(--${t.colorVar})` }}>{t.emoji} {t.name}</div>
+              <div className="text-sm" style={{ color: `var(--${t.colorVar})` }}>
+                {t.emoji} {t.name}
+              </div>
               <div className="font-display text-5xl tabular-nums mt-1">{counts[t.id]}</div>
             </div>
           ))}

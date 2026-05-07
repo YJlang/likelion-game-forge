@@ -23,14 +23,21 @@ function Charades() {
   const [team, setTeam] = useState<TeamId | null>(null);
   const [current, setCurrent] = useState<Charade | null>(null);
   const [revealed, setRevealed] = useState(false);
-  const [counts, setCounts] = useState<Record<TeamId, number>>({ team1: 0, team2: 0, team3: 0, team4: 0 });
+  const [counts, setCounts] = useState<Record<TeamId, number>>({
+    team1: 0,
+    team2: 0,
+    team3: 0,
+    team4: 0,
+  });
 
   const remaining = useMemo(() => CHARADES.filter((c) => !used.includes(c.id)), [used]);
 
   const draw = () => {
     if (!remaining.length) return toast.error("남은 키워드가 없습니다.");
     const pick = remaining[Math.floor(Math.random() * remaining.length)];
-    setCurrent(pick); setRevealed(false); markUsed("charade", pick.id);
+    setCurrent(pick);
+    setRevealed(false);
+    markUsed("charade", pick.id);
   };
 
   const score = () => {
@@ -39,14 +46,21 @@ function Charades() {
     toast.success("정답 +1");
     draw();
   };
-  const skip = () => { toast("스킵"); draw(); };
+  const skip = () => {
+    toast("스킵");
+    draw();
+  };
 
   return (
     <div className="space-y-8">
       <GameHeader
         title="게임2. 몸으로 말해요"
         subtitle="3분 안에 더 많이 맞히면 승리!"
-        badge={<span className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-bold">🤸 게임 2</span>}
+        badge={
+          <span className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-bold">
+            🤸 게임 2
+          </span>
+        }
         steps={["팀 선택", "타이머 시작", "키워드 뽑기", "정답/스킵 반복"]}
         currentStep={!team ? 0 : !current ? 2 : 3}
         rules={
@@ -62,7 +76,9 @@ function Charades() {
 
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="rounded-3xl bg-card border-2 border-border p-8 flex flex-col items-center justify-center">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-4">⏱ 3분 카운트다운</div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-4">
+            ⏱ 3분 카운트다운
+          </div>
           <Timer durationSec={180} size="xl" onComplete={() => toast("⏰ 시간 종료!")} />
         </div>
 
@@ -71,12 +87,25 @@ function Charades() {
             <div className="text-sm uppercase tracking-widest text-muted-foreground font-bold">
               남은 키워드 {remaining.length}/{CHARADES.length}
             </div>
-            <button onClick={() => { resetUsed("charade"); toast.success("사용 키워드 초기화"); }} className="text-xs text-muted-foreground underline">
+            <button
+              onClick={() => {
+                resetUsed("charade");
+                toast.success("사용 키워드 초기화");
+              }}
+              className="text-xs text-muted-foreground underline"
+            >
               사용 목록 초기화
             </button>
           </div>
 
-          <BigButton size="xl" className="w-full animate-pulse-glow" onClick={draw} disabled={!team}>🎰 키워드 뽑기</BigButton>
+          <BigButton
+            size="xl"
+            className="w-full animate-pulse-glow"
+            onClick={draw}
+            disabled={!team}
+          >
+            🎰 키워드 뽑기
+          </BigButton>
 
           <AnimatePresence mode="wait">
             {current && (
@@ -88,7 +117,9 @@ function Charades() {
                 transition={{ type: "spring", stiffness: 240, damping: 16 }}
                 className="rounded-2xl border-2 border-primary glow-primary bg-background/50 p-8 text-center min-h-[220px] flex flex-col items-center justify-center"
               >
-                <div className="text-sm text-muted-foreground font-bold uppercase tracking-widest">{current.category} · 난이도 {current.difficulty}</div>
+                <div className="text-sm text-muted-foreground font-bold uppercase tracking-widest">
+                  {current.category} · 난이도 {current.difficulty}
+                </div>
                 {revealed ? (
                   <motion.div
                     initial={{ scale: 0.7, opacity: 0 }}
@@ -99,9 +130,16 @@ function Charades() {
                     {current.keyword}
                   </motion.div>
                 ) : (
-                  <div className="font-display text-7xl text-muted-foreground/40 mt-3 tracking-widest">● ● ● ● ●</div>
+                  <div className="font-display text-7xl text-muted-foreground/40 mt-3 tracking-widest">
+                    ● ● ● ● ●
+                  </div>
                 )}
-                <BigButton variant={revealed ? "ghost" : "accent"} size="lg" className="mt-5" onClick={() => setRevealed((r) => !r)}>
+                <BigButton
+                  variant={revealed ? "ghost" : "accent"}
+                  size="lg"
+                  className="mt-5"
+                  onClick={() => setRevealed((r) => !r)}
+                >
                   {revealed ? "🙈 키워드 숨기기" : "👀 키워드 공개 (출제자만)"}
                 </BigButton>
               </motion.div>
@@ -109,8 +147,12 @@ function Charades() {
           </AnimatePresence>
 
           <div className="grid grid-cols-2 gap-3">
-            <BigButton variant="success" size="lg" onClick={score}>✅ +1 정답</BigButton>
-            <BigButton variant="ghost" size="lg" onClick={skip}>⏭ 스킵</BigButton>
+            <BigButton variant="success" size="lg" onClick={score}>
+              ✅ +1 정답
+            </BigButton>
+            <BigButton variant="ghost" size="lg" onClick={skip}>
+              ⏭ 스킵
+            </BigButton>
           </div>
         </div>
       </div>
@@ -120,7 +162,9 @@ function Charades() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {TEAMS.map((t) => (
             <div key={t.id} className="rounded-xl bg-background/50 p-4">
-              <div className="text-sm" style={{ color: `var(--${t.colorVar})` }}>{t.emoji} {t.name} {t.leader}</div>
+              <div className="text-sm" style={{ color: `var(--${t.colorVar})` }}>
+                {t.emoji} {t.name} {t.leader}
+              </div>
               <div className="font-display text-5xl tabular-nums mt-1">{counts[t.id]}</div>
             </div>
           ))}

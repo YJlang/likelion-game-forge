@@ -13,7 +13,11 @@ function Singing() {
       <GameHeader
         title="게임5. 노래 대회"
         subtitle="🔥 가장 점수가 큰 중요 게임! 1등 +6, 불참 -2, 호응 1등 +1"
-        badge={<span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold animate-pulse-glow">🔥 중요 게임</span>}
+        badge={
+          <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold animate-pulse-glow">
+            🔥 중요 게임
+          </span>
+        }
         rules={
           <ul className="list-disc pl-5 space-y-1">
             <li>팀별로 노래를 부릅니다.</li>
