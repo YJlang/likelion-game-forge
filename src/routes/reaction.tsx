@@ -138,14 +138,14 @@ function Reaction() {
             return (
               <div key={t.id} className="rounded-xl bg-background/50 p-4">
                 <div className="text-sm" style={{ color: `var(--${t.colorVar})` }}>{t.emoji} {t.name}</div>
-                <div className={`font-display text-3xl mt-1 ${r.ok ? "text-success" : r.sec === null ? "text-muted-foreground" : "text-destructive"}`}>
-                  {r.ok ? `${r.sec}s` : r.sec === null && r === results[t.id] && results[t.id].sec === null && !results[t.id].ok ? "—" : "실패"}
+                <div className={`font-display text-3xl mt-1 tabular-nums ${r.ok ? "text-success" : r.sec === null ? "text-muted-foreground" : "text-destructive"}`}>
+                  {r.ok ? `${r.sec}s` : r.sec === null ? "—" : "실패"}
                 </div>
               </div>
             );
           })}
         </div>
-        <p className="text-xs text-muted-foreground mt-3">추측자: {guesser || "—"}</p>
+        <p className="text-sm text-muted-foreground mt-3">추측자: <span className="font-bold text-foreground">{guesser || "—"}</span></p>
       </div>
 
       <ResultsPanel game="reaction" />
