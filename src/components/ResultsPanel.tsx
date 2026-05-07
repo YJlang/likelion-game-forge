@@ -182,16 +182,19 @@ export function ResultsPanel({ game, singing = false }: Props) {
       </div>
 
       {/* Preview */}
-      <div className="rounded-2xl bg-background/50 border border-border p-4">
-        <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-3">미리보기</div>
+      <div className="rounded-2xl bg-background/50 border-2 border-accent/40 p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-sm uppercase tracking-widest text-accent font-bold">📊 점수 미리보기</div>
+          <div className="text-xs text-muted-foreground">{valid ? "✅ 입력 완료" : "⚠️ 1~4등 모두 다른 팀으로 선택하세요"}</div>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {(Object.keys(preview) as TeamId[]).map((tid) => {
             const t = teamById(tid);
             const p = preview[tid];
             return (
-              <div key={tid} className="rounded-xl bg-card p-3 border border-border">
-                <div className="text-sm text-muted-foreground">{t.emoji} {t.name}</div>
-                <div className={`font-display text-3xl ${p.delta > 0 ? "text-success" : p.delta < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+              <div key={tid} className="rounded-xl bg-card p-4 border border-border">
+                <div className="text-sm font-bold" style={{ color: `var(--${t.colorVar})` }}>{t.emoji} {t.name}</div>
+                <div className={`font-display text-5xl tabular-nums mt-1 ${p.delta > 0 ? "text-success" : p.delta < 0 ? "text-destructive" : "text-muted-foreground"}`}>
                   {p.delta > 0 ? "+" : ""}{p.delta}
                 </div>
                 <div className="text-[11px] text-muted-foreground mt-1 leading-tight">
@@ -203,7 +206,7 @@ export function ResultsPanel({ game, singing = false }: Props) {
         </div>
       </div>
 
-      <BigButton size="lg" disabled={!valid} onClick={() => setConfirmOpen(true)} className="w-full">
+      <BigButton size="xl" disabled={!valid} onClick={() => setConfirmOpen(true)} className="w-full">
         ✅ 점수 반영하기
       </BigButton>
 
@@ -211,8 +214,26 @@ export function ResultsPanel({ game, singing = false }: Props) {
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title="점수를 반영할까요?"
-        description="반영 후 점수판에 즉시 반영되며 새로고침해도 유지됩니다."
-        confirmLabel="반영하기"
+        description={
+          <div className="space-y-3">
+            <div className="text-muted-foreground">반영 후 점수판에 즉시 반영되며, 새로고침해도 유지됩니다.</div>
+            <div className="rounded-xl border border-border bg-background/50 p-3 space-y-1">
+              {(Object.keys(preview) as TeamId[]).filter((tid) => preview[tid].delta !== 0).map((tid) => {
+                const t = teamById(tid);
+                const p = preview[tid];
+                return (
+                  <div key={tid} className="flex items-center justify-between text-base">
+                    <span className="font-bold">{t.emoji} {t.name}</span>
+                    <span className={`font-display text-2xl tabular-nums ${p.delta > 0 ? "text-success" : "text-destructive"}`}>
+                      {p.delta > 0 ? "+" : ""}{p.delta}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        }
+        confirmLabel="네, 반영"
         onConfirm={handleApply}
       />
     </div>
