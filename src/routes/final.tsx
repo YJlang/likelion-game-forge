@@ -40,8 +40,8 @@ function Final() {
 
   const start = () => {
     setPhase("countdown");
-    setCount(3);
-    let n = 3;
+    setCount(5);
+    let n = 5;
     const iv = setInterval(() => {
       n -= 1;
       setCount(n);
@@ -49,8 +49,9 @@ function Final() {
         clearInterval(iv);
         setPhase("reveal");
         fireBigConfetti();
+        setTimeout(() => fireBigConfetti(), 1500);
       }
-    }, 1000);
+    }, 900);
   };
 
   return (
