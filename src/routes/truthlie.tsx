@@ -18,6 +18,8 @@ function TruthLie() {
   const used = useGameStore((s) => s.usedTruthIds);
   const markUsed = useGameStore((s) => s.markUsed);
   const resetUsed = useGameStore((s) => s.resetUsed);
+  const counts = useGameStore((s) => s.correctCounts.truthlie);
+  const recordCorrect = useGameStore((s) => s.recordCorrect);
 
   const [revealed, setRevealed] = useState(false);
   const [qNum, setQNum] = useState(1);
@@ -27,13 +29,6 @@ function TruthLie() {
     team3: false,
     team4: false,
   });
-  const [counts, setCounts] = useState<Record<TeamId, number>>({
-    team1: 0,
-    team2: 0,
-    team3: 0,
-    team4: 0,
-  });
-
   const remaining = useMemo(() => TRUTH_LIES.filter((q) => !used.includes(q.id)), [used]);
   const [current, setCurrent] = useState<(typeof TRUTH_LIES)[number] | null>(null);
 
@@ -48,13 +43,8 @@ function TruthLie() {
   };
 
   const next = () => {
-    // commit corrects
-    setCounts((c) => {
-      const updated = { ...c };
-      (Object.keys(correct) as TeamId[]).forEach((tid) => {
-        if (correct[tid]) updated[tid] += 1;
-      });
-      return updated;
+    (Object.keys(correct) as TeamId[]).forEach((tid) => {
+      if (correct[tid]) recordCorrect("truthlie", tid, "진실/거짓 정답 +1");
     });
     setQNum((n) => n + 1);
     draw();

@@ -35,6 +35,7 @@ interface State {
   scores: Record<TeamId, number>;
   scoreLog: ScoreLogEntry[];
   mvpLog: MvpLogEntry[];
+  correctCounts: Record<Exclude<GameKey, "singing">, Record<TeamId, number>>;
   usedSongIds: number[];
   usedCharadeIds: number[];
   usedReactionIds: number[];
@@ -52,6 +53,7 @@ interface Actions {
   resetUsed: (kind: "song" | "charade" | "reaction" | "truth") => void;
   resetAll: () => void;
   manualAdjust: (team: TeamId, delta: number, reason: string) => void;
+  recordCorrect: (game: Exclude<GameKey, "singing">, team: TeamId, reason?: string) => void;
   undoLastScoreBatch: () => boolean;
 }
 
@@ -63,10 +65,18 @@ const initialScores = TEAMS.reduce(
   {} as Record<TeamId, number>,
 );
 
+const createTeamCounter = () => ({ ...initialScores });
+
 const initial: State = {
   scores: { ...initialScores },
   scoreLog: [],
   mvpLog: [],
+  correctCounts: {
+    jukebox: createTeamCounter(),
+    charades: createTeamCounter(),
+    truthlie: createTeamCounter(),
+    reaction: createTeamCounter(),
+  },
   usedSongIds: [],
   usedCharadeIds: [],
   usedReactionIds: [],
@@ -144,6 +154,23 @@ export const useGameStore = create<State & Actions>()(
             lastSavedAt: at,
           };
         }),
+      recordCorrect: (game, team, reason = "정답 +1") =>
+        set((s) => {
+          const at = Date.now();
+          const batchId = uid();
+          return {
+            scores: { ...s.scores, [team]: (s.scores[team] ?? 0) + 1 },
+            correctCounts: {
+              ...s.correctCounts,
+              [game]: {
+                ...s.correctCounts[game],
+                [team]: (s.correctCounts[game][team] ?? 0) + 1,
+              },
+            },
+            scoreLog: [...s.scoreLog, { id: uid(), batchId, game, team, delta: 1, reason, at }],
+            lastSavedAt: at,
+          };
+        }),
       undoLastScoreBatch: () => {
         let undone = false;
         set((s) => {
@@ -159,14 +186,31 @@ export const useGameStore = create<State & Actions>()(
           const entryIds = new Set(entries.map((entry) => entry.id));
           const batchId = last.batchId;
           const scores = { ...s.scores };
+          const correctCounts = {
+            jukebox: { ...s.correctCounts.jukebox },
+            charades: { ...s.correctCounts.charades },
+            truthlie: { ...s.correctCounts.truthlie },
+            reaction: { ...s.correctCounts.reaction },
+          };
 
           for (const entry of entries) {
             scores[entry.team] = (scores[entry.team] ?? 0) - entry.delta;
+            if (
+              entry.reason.includes("정답") &&
+              entry.game !== "manual" &&
+              entry.game !== "singing"
+            ) {
+              correctCounts[entry.game][entry.team] = Math.max(
+                0,
+                (correctCounts[entry.game][entry.team] ?? 0) - entry.delta,
+              );
+            }
           }
 
           undone = true;
           return {
             scores,
+            correctCounts,
             scoreLog: s.scoreLog.filter((entry) => !entryIds.has(entry.id)),
             mvpLog: batchId ? s.mvpLog.filter((entry) => entry.scoreBatchId !== batchId) : s.mvpLog,
             lastSavedAt: Date.now(),

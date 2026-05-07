@@ -20,6 +20,8 @@ function Reaction() {
   const used = useGameStore((s) => s.usedReactionIds);
   const markUsed = useGameStore((s) => s.markUsed);
   const resetUsed = useGameStore((s) => s.resetUsed);
+  const counts = useGameStore((s) => s.correctCounts.reaction);
+  const recordCorrect = useGameStore((s) => s.recordCorrect);
   const [team, setTeam] = useState<TeamId | null>(null);
   const [guesser, setGuesser] = useState("");
   const [current, setCurrent] = useState<ReactionAction | null>(null);
@@ -47,6 +49,7 @@ function Reaction() {
     if (!team) return toast.error("팀을 먼저 선택하세요");
     const sec = startedAt ? (Date.now() - startedAt) / 1000 : 0;
     setResults((r) => ({ ...r, [team]: { ok: true, sec: Math.round(sec * 10) / 10 } }));
+    recordCorrect("reaction", team, `반응 행동 정답 +1 (${sec.toFixed(1)}초)`);
     toast.success(`성공! ${sec.toFixed(1)}초`);
   };
   const failTeam = () => {
@@ -189,6 +192,7 @@ function Reaction() {
                 >
                   {r.ok ? `${r.sec}s` : r.sec === null ? "—" : "실패"}
                 </div>
+                <div className="text-xs text-muted-foreground mt-1">정답 {counts[t.id] ?? 0}회</div>
               </div>
             );
           })}

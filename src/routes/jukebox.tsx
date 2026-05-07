@@ -20,16 +20,12 @@ function Jukebox() {
   const used = useGameStore((s) => s.usedSongIds);
   const markUsed = useGameStore((s) => s.markUsed);
   const resetUsed = useGameStore((s) => s.resetUsed);
+  const counts = useGameStore((s) => s.correctCounts.jukebox);
+  const recordCorrect = useGameStore((s) => s.recordCorrect);
   const [team, setTeam] = useState<TeamId | null>(null);
   const [round, setRound] = useState(1);
   const [current, setCurrent] = useState<Song | null>(null);
   const [revealed, setRevealed] = useState(false);
-  const [counts, setCounts] = useState<Record<TeamId, number>>({
-    team1: 0,
-    team2: 0,
-    team3: 0,
-    team4: 0,
-  });
 
   const remaining = useMemo(() => SONGS.filter((s) => !used.includes(s.id)), [used]);
 
@@ -46,7 +42,7 @@ function Jukebox() {
 
   const correct = () => {
     if (!team || !current) return;
-    setCounts((c) => ({ ...c, [team]: c[team] + 1 }));
+    recordCorrect("jukebox", team, "주크박스 정답 +1");
     toast.success(`${TEAMS.find((t) => t.id === team)!.name} 정답!`);
     setRound((r) => r + 1);
     setCurrent(null);

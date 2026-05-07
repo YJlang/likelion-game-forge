@@ -20,15 +20,11 @@ function Charades() {
   const used = useGameStore((s) => s.usedCharadeIds);
   const markUsed = useGameStore((s) => s.markUsed);
   const resetUsed = useGameStore((s) => s.resetUsed);
+  const counts = useGameStore((s) => s.correctCounts.charades);
+  const recordCorrect = useGameStore((s) => s.recordCorrect);
   const [team, setTeam] = useState<TeamId | null>(null);
   const [current, setCurrent] = useState<Charade | null>(null);
   const [revealed, setRevealed] = useState(false);
-  const [counts, setCounts] = useState<Record<TeamId, number>>({
-    team1: 0,
-    team2: 0,
-    team3: 0,
-    team4: 0,
-  });
 
   const remaining = useMemo(() => CHARADES.filter((c) => !used.includes(c.id)), [used]);
 
@@ -42,7 +38,7 @@ function Charades() {
 
   const score = () => {
     if (!team) return toast.error("팀을 먼저 선택하세요");
-    setCounts((c) => ({ ...c, [team]: c[team] + 1 }));
+    recordCorrect("charades", team, "몸으로 말해요 정답 +1");
     toast.success("정답 +1");
     draw();
   };
