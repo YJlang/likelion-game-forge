@@ -9,8 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ScoreboardRouteImport } from './routes/scoreboard'
+import { Route as FinalRouteImport } from './routes/final'
 import { Route as IndexRouteImport } from './routes/index'
 
+const ScoreboardRoute = ScoreboardRouteImport.update({
+  id: '/scoreboard',
+  path: '/scoreboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FinalRoute = FinalRouteImport.update({
+  id: '/final',
+  path: '/final',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +31,50 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/final': typeof FinalRoute
+  '/scoreboard': typeof ScoreboardRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/final': typeof FinalRoute
+  '/scoreboard': typeof ScoreboardRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/final': typeof FinalRoute
+  '/scoreboard': typeof ScoreboardRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/final' | '/scoreboard'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/final' | '/scoreboard'
+  id: '__root__' | '/' | '/final' | '/scoreboard'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  FinalRoute: typeof FinalRoute
+  ScoreboardRoute: typeof ScoreboardRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/scoreboard': {
+      id: '/scoreboard'
+      path: '/scoreboard'
+      fullPath: '/scoreboard'
+      preLoaderRoute: typeof ScoreboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/final': {
+      id: '/final'
+      path: '/final'
+      fullPath: '/final'
+      preLoaderRoute: typeof FinalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,7 +87,19 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  FinalRoute: FinalRoute,
+  ScoreboardRoute: ScoreboardRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
