@@ -74,8 +74,21 @@ function Final() {
         )}
 
         {phase === "countdown" && (
-          <motion.div key="cd" initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center justify-center py-20">
-            <div className="text-display text-[280px] text-accent leading-none" style={{ textShadow: "0 0 60px var(--accent)" }}>
+          <motion.div
+            key={`cd-${count}`}
+            initial={{ scale: 0, rotate: -25, opacity: 0 }}
+            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+            exit={{ scale: 3, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 200, damping: 12 }}
+            className="flex items-center justify-center py-20"
+          >
+            <div
+              className="text-display text-[320px] leading-none"
+              style={{
+                color: count > 0 ? "var(--accent)" : "var(--primary)",
+                textShadow: `0 0 80px ${count > 0 ? "var(--accent)" : "var(--primary)"}`,
+              }}
+            >
               {count > 0 ? count : "GO!"}
             </div>
           </motion.div>
