@@ -106,13 +106,19 @@ export function ResultsPanel({ game, singing = false }: Props) {
   return (
     <div className="rounded-3xl bg-card border border-border p-6 md:p-8 space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-3xl">📥 점수 반영</h2>
+        <h2 className="font-display text-3xl">{singing ? "📥 점수 반영" : "🏁 순위 점수 반영"}</h2>
         <span className="text-xs uppercase tracking-widest text-muted-foreground">
           {singing
             ? "노래 대회 점수 (6/4/2/1, 불참 -2, 호응 +1)"
             : "일반 게임 점수 (4/3/2/1, MVP +1)"}
         </span>
       </div>
+      {!singing && (
+        <div className="rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm font-semibold text-accent">
+          정답 +1점은 버튼을 누르는 즉시 LIVE 점수에 저장됩니다. 이 패널은 최종 순위 점수(4/3/2/1)나
+          MVP 보너스를 추가할 때만 사용하세요.
+        </div>
+      )}
 
       {/* Ranks */}
       <div className="grid md:grid-cols-4 gap-3">
