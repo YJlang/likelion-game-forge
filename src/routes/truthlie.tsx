@@ -53,7 +53,9 @@ function TruthLie() {
       <GameHeader
         title="게임3. 운영진 진실/거짓"
         subtitle="문장이 진실인지 거짓인지 맞춰보세요!"
-        badge={<span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold">🤔 게임 3</span>}
+        badge={<span className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-bold">🤔 게임 3</span>}
+        steps={["문제 뽑기", "팀별 정답 체크", "정답 공개", "다음 문제"]}
+        currentStep={!current ? 0 : !revealed ? 1 : 2}
         rules={
           <ul className="list-disc pl-5 space-y-1">
             <li>운영진에 대한 문장이 나옵니다.</li>
