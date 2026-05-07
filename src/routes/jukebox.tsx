@@ -4,6 +4,7 @@ import { GameHeader } from "@/components/GameHeader";
 import { BigButton } from "@/components/BigButton";
 import { ResultsPanel } from "@/components/ResultsPanel";
 import { TeamPicker } from "@/components/TeamPicker";
+import { SlotReveal } from "@/components/SlotReveal";
 import { useGameStore } from "@/store/useGameStore";
 import { SONGS, type Song } from "@/data/songs";
 import { TEAMS, type TeamId } from "@/data/teams";
@@ -27,11 +28,11 @@ function Jukebox() {
 
   const remaining = useMemo(() => SONGS.filter((s) => !used.includes(s.id)), [used]);
 
+  const step = !team ? 0 : !current ? 1 : !revealed ? 2 : 3;
+
   const draw = () => {
-    if (!remaining.length) {
-      toast.error("남은 노래가 없습니다. 사용 목록을 초기화하세요.");
-      return;
-    }
+    if (!team) return toast.error("먼저 차례 팀을 선택하세요");
+    if (!remaining.length) return toast.error("남은 노래가 없습니다. 사용 목록을 초기화하세요.");
     const pick = remaining[Math.floor(Math.random() * remaining.length)];
     setCurrent(pick);
     setRevealed(false);
@@ -39,14 +40,14 @@ function Jukebox() {
   };
 
   const correct = () => {
-    if (!team) return toast.error("참여 팀을 먼저 선택하세요");
+    if (!team || !current) return;
     setCounts((c) => ({ ...c, [team]: c[team] + 1 }));
     toast.success(`${TEAMS.find((t) => t.id === team)!.name} 정답!`);
     setRound((r) => r + 1);
     setCurrent(null); setRevealed(false);
   };
   const fail = () => {
-    if (!team) return toast.error("참여 팀을 먼저 선택하세요");
+    if (!team || !current) return;
     toast(`${TEAMS.find((t) => t.id === team)!.name} 실패`);
     setRound((r) => r + 1);
     setCurrent(null); setRevealed(false);
@@ -57,7 +58,9 @@ function Jukebox() {
       <GameHeader
         title="게임1. 노래 맞추기 주크박스"
         subtitle="년도와 장르 힌트만 보고 노래를 맞추세요!"
-        badge={<span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold">🎵 게임 1</span>}
+        badge={<span className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-bold">🎵 게임 1</span>}
+        steps={["팀 선택", "노래 뽑기", "정답 공개", "결과 입력"]}
+        currentStep={step}
         rules={
           <ul className="list-disc pl-5 space-y-1">
             <li>팀별로 한 명씩 나와서 진행. 총 4팀.</li>
@@ -67,10 +70,10 @@ function Jukebox() {
         }
       />
 
-      <TeamPicker value={team} onChange={setTeam} label="현재 차례 팀" />
+      <TeamPicker value={team} onChange={setTeam} label="① 현재 차례 팀" />
 
       <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 rounded-3xl bg-card border border-border p-8 space-y-6">
+        <div className="lg:col-span-2 rounded-3xl bg-card border-2 border-border p-8 space-y-6">
           <div className="flex items-center justify-between">
             <div className="text-sm uppercase tracking-widest text-muted-foreground font-bold">
               라운드 {round} · 남은 곡 {remaining.length}/{SONGS.length}
@@ -80,39 +83,63 @@ function Jukebox() {
             </button>
           </div>
 
-          <BigButton size="xl" className="w-full" onClick={draw}>🎰 랜덤 뽑기</BigButton>
+          <BigButton size="xl" className="w-full animate-pulse-glow" onClick={draw} disabled={!team || !!current}>
+            ② 🎰 랜덤 뽑기
+          </BigButton>
 
           <AnimatePresence mode="wait">
             {current && (
-              <motion.div key={current.id} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="rounded-2xl bg-background/50 p-6 space-y-4 border border-border">
+              <motion.div
+                key={current.id}
+                initial={{ scale: 0.6, opacity: 0, rotate: -3 }}
+                animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 220, damping: 18 }}
+                className="rounded-2xl bg-background/50 p-6 space-y-4 border-2 border-primary/40 glow-primary"
+              >
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-xl bg-card p-5 text-center">
-                    <div className="text-xs text-muted-foreground">년도</div>
-                    <div className="font-display text-6xl text-accent">{current.year}</div>
+                  <div className="rounded-xl bg-card p-5 text-center border border-border">
+                    <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold">년도</div>
+                    <SlotReveal
+                      pool={SONGS.map((s) => String(s.year))}
+                      value={String(current.year)}
+                      className="font-display text-7xl text-accent mt-1"
+                    />
                   </div>
-                  <div className="rounded-xl bg-card p-5 text-center">
-                    <div className="text-xs text-muted-foreground">장르</div>
-                    <div className="font-display text-3xl text-primary mt-3">{current.genre}</div>
+                  <div className="rounded-xl bg-card p-5 text-center border border-border">
+                    <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold">장르</div>
+                    <SlotReveal
+                      pool={[...new Set(SONGS.map((s) => s.genre))]}
+                      value={current.genre}
+                      className="font-display text-4xl text-primary mt-3"
+                    />
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
                   <BigButton variant="accent" onClick={() => window.open(current.youtubeUrl, "_blank")}>▶ 유튜브 열기</BigButton>
                   <BigButton variant={revealed ? "ghost" : "outline"} onClick={() => setRevealed((r) => !r)}>
-                    {revealed ? "🙈 정답 숨기기" : "👀 정답 보기"}
+                    {revealed ? "🙈 정답 숨기기" : "③ 👀 정답 공개"}
                   </BigButton>
                 </div>
 
-                {revealed && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl border-2 border-accent bg-accent/10 p-5 text-center">
-                    <div className="text-xs uppercase tracking-widest text-accent font-bold">정답</div>
-                    <div className="font-display text-4xl mt-1">{current.title}</div>
-                    <div className="text-xl text-muted-foreground mt-1">{current.artist}</div>
-                  </motion.div>
-                )}
+                <AnimatePresence>
+                  {revealed && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="rounded-xl border-2 border-accent bg-accent/10 p-6 text-center glow-yellow"
+                    >
+                      <div className="text-xs uppercase tracking-widest text-accent font-bold">정답</div>
+                      <div className="font-display text-5xl md:text-6xl mt-2">{current.title}</div>
+                      <div className="text-2xl text-muted-foreground mt-2">{current.artist}</div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <BigButton variant="success" size="lg" onClick={correct}>✅ 맞춤</BigButton>
+                  <BigButton variant="success" size="lg" onClick={correct}>✅ 맞춤 +1</BigButton>
                   <BigButton variant="danger" size="lg" onClick={fail}>❌ 실패</BigButton>
                 </div>
               </motion.div>
@@ -120,11 +147,11 @@ function Jukebox() {
           </AnimatePresence>
         </div>
 
-        <div className="rounded-3xl bg-card border border-border p-6">
+        <div className="rounded-3xl bg-card border-2 border-border p-6">
           <h3 className="font-display text-2xl mb-4">📋 팀별 정답 개수</h3>
           <div className="space-y-2">
             {TEAMS.map((t) => (
-              <div key={t.id} className="flex items-center justify-between p-3 rounded-xl bg-background/50">
+              <div key={t.id} className="flex items-center justify-between p-3 rounded-xl bg-background/50 border border-border">
                 <span className="font-bold" style={{ color: `var(--${t.colorVar})` }}>{t.emoji} {t.name} {t.leader}</span>
                 <span className="font-display text-3xl tabular-nums">{counts[t.id]}</span>
               </div>
