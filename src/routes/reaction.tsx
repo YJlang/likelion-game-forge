@@ -100,16 +100,24 @@ function Reaction() {
 
           <AnimatePresence mode="wait">
             {current && (
-              <motion.div key={current.id} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-                className="rounded-2xl border-2 border-primary bg-background/50 p-6 text-center">
-                <div className="text-xs text-muted-foreground">난이도 {current.difficulty}</div>
+              <motion.div
+                key={current.id}
+                initial={{ scale: 0.5, opacity: 0, rotate: -4 }}
+                animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 220, damping: 16 }}
+                className="rounded-2xl border-2 border-primary glow-primary bg-background/50 p-6 text-center"
+              >
+                <div className="text-sm text-muted-foreground font-bold uppercase tracking-widest">난이도 {current.difficulty}</div>
                 {revealed ? (
-                  <div className="font-display text-3xl md:text-5xl text-accent mt-2">{current.action}</div>
+                  <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                    className="font-display text-4xl md:text-6xl text-accent mt-3" style={{ textShadow: "0 0 30px var(--accent)" }}>
+                    {current.action}
+                  </motion.div>
                 ) : (
-                  <div className="font-display text-5xl text-muted-foreground mt-2">● ● ● ● ●</div>
+                  <div className="font-display text-6xl text-muted-foreground/40 mt-3 tracking-widest">● ● ● ● ●</div>
                 )}
-                <BigButton className="mt-4" variant={revealed ? "ghost" : "accent"} onClick={() => setRevealed((r) => !r)}>
-                  {revealed ? "🙈 주제 숨기기" : "👀 주제 보기 (운영진만)"}
+                <BigButton size="lg" className="mt-5" variant={revealed ? "ghost" : "accent"} onClick={() => setRevealed((r) => !r)}>
+                  {revealed ? "🙈 주제 숨기기" : "👀 주제 공개 (운영진만)"}
                 </BigButton>
               </motion.div>
             )}
