@@ -82,9 +82,9 @@ function TruthLie() {
         <AnimatePresence mode="wait">
           {current && (
             <motion.div key={current.id} initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-              className="rounded-2xl border-2 border-primary bg-background/50 p-8 text-center">
-              <div className="font-display text-3xl text-primary">{current.person}</div>
-              <div className="font-display text-4xl md:text-6xl mt-4 leading-tight">"{current.statement}"</div>
+              className="rounded-2xl border-2 border-primary glow-primary bg-background/50 p-8 text-center">
+              <div className="font-display text-4xl text-primary">{current.person}</div>
+              <div className="font-display text-5xl md:text-7xl mt-4 leading-tight" style={{ textShadow: "0 0 30px rgba(249,115,22,0.4)" }}>"{current.statement}"</div>
               <div className="mt-6 flex flex-wrap gap-3 justify-center">
                 <BigButton size="lg" variant={revealed ? "ghost" : "accent"} onClick={() => setRevealed((r) => !r)}>
                   {revealed ? "🙈 정답 숨기기" : "👀 정답 공개"}
