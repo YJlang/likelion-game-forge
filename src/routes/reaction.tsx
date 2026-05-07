@@ -58,7 +58,9 @@ function Reaction() {
       <GameHeader
         title="게임4. 반응으로 행동 맞추기"
         subtitle="환호와 야유만으로 행동을 추측합니다!"
-        badge={<span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold">🎭 게임 4</span>}
+        badge={<span className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-bold">🎭 게임 4</span>}
+        steps={["팀/추측자 선정", "주제 뽑기", "성공/실패 입력"]}
+        currentStep={!team ? 0 : !current ? 1 : 2}
         rules={
           <ul className="list-disc pl-5 space-y-1">
             <li>한 명을 추측자로 선정, 나머지는 주제 확인.</li>
