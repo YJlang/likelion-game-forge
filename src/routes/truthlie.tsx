@@ -75,13 +75,15 @@ function TruthLie() {
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <BigButton size="lg" onClick={draw}>🎰 다음 문제 뽑기</BigButton>
-        </div>
+        <BigButton size="xl" className="w-full animate-pulse-glow" onClick={draw}>🎰 다음 문제 뽑기</BigButton>
 
         <AnimatePresence mode="wait">
           {current && (
-            <motion.div key={current.id} initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+            <motion.div key={current.id}
+              initial={{ scale: 0.6, opacity: 0, rotate: -3 }}
+              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 220, damping: 16 }}
               className="rounded-2xl border-2 border-primary glow-primary bg-background/50 p-8 text-center">
               <div className="font-display text-4xl text-primary">{current.person}</div>
               <div className="font-display text-5xl md:text-7xl mt-4 leading-tight" style={{ textShadow: "0 0 30px rgba(249,115,22,0.4)" }}>"{current.statement}"</div>
