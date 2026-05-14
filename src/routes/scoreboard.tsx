@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { TEAMS, teamById, type TeamId } from "@/data/teams";
+import { type TeamId } from "@/data/teams";
 import { useGameStore, GAME_LABEL } from "@/store/useGameStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
@@ -19,6 +19,7 @@ export const Route = createFileRoute("/scoreboard")({
 
 function Scoreboard() {
   const scores = useGameStore((s) => s.scores);
+  const teams = useGameStore((s) => s.teams);
   const log = useGameStore((s) => s.scoreLog);
   const lastSavedAt = useGameStore((s) => s.lastSavedAt);
   const manualAdjust = useGameStore((s) => s.manualAdjust);
@@ -28,7 +29,7 @@ function Scoreboard() {
   const [resetOpen, setResetOpen] = useState(false);
   const [expanded, setExpanded] = useState<TeamId | null>(null);
 
-  const sorted = [...TEAMS].sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0));
+  const sorted = [...teams].sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0));
   const savedTime = new Date(lastSavedAt).toLocaleTimeString("ko-KR");
   const lastEntry = log.at(-1);
   const lastBatchEntries = lastEntry
@@ -108,13 +109,13 @@ function Scoreboard() {
 
               <div className="mt-4 flex flex-wrap gap-2">
                 <button
-                  onClick={() => manualAdjust(t.id, +1, "수동 +1")}
+                  onClick={() => void manualAdjust(t.id, +1, "수동 +1")}
                   className="px-3 py-1.5 rounded-lg bg-success/20 text-success text-sm font-bold border border-success/40"
                 >
                   +1
                 </button>
                 <button
-                  onClick={() => manualAdjust(t.id, -1, "수동 -1")}
+                  onClick={() => void manualAdjust(t.id, -1, "수동 -1")}
                   className="px-3 py-1.5 rounded-lg bg-destructive/20 text-destructive text-sm font-bold border border-destructive/40"
                 >
                   -1
@@ -176,7 +177,7 @@ function Scoreboard() {
             </div>
             <div className="rounded-xl border border-border bg-background/50 p-3 space-y-1">
               {lastBatchEntries.map((entry) => {
-                const t = teamById(entry.team);
+                const t = teams.find((team) => team.id === entry.team)!;
                 return (
                   <div key={entry.id} className="flex items-center justify-between text-base">
                     <span className="font-bold">
@@ -198,10 +199,11 @@ function Scoreboard() {
         }
         confirmLabel="네, 취소"
         onConfirm={() => {
-          const ok = undoLastScoreBatch();
-          toast[ok ? "success" : "error"](
-            ok ? "최근 점수 반영을 취소했습니다." : "취소할 점수 내역이 없습니다.",
-          );
+          void undoLastScoreBatch().then((ok) => {
+            toast[ok ? "success" : "error"](
+              ok ? "최근 점수 반영을 취소했습니다." : "취소할 점수 내역이 없습니다.",
+            );
+          });
           setUndoOpen(false);
         }}
       />
@@ -214,8 +216,7 @@ function Scoreboard() {
         description="모든 팀 점수, 게임 기록, 사용된 항목, MVP 기록이 영구 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
         confirmLabel="네, 전부 초기화"
         onConfirm={() => {
-          resetAll();
-          toast.success("초기화 완료");
+          void resetAll().then(() => toast.success("초기화 완료"));
           setResetOpen(false);
         }}
       />

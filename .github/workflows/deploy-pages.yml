@@ -32,6 +32,9 @@ jobs:
 
       - name: Build GitHub Pages artifact
         run: bun run build:pages
+        env:
+          VITE_SUPABASE_URL: https://mxofuzhfdthqpzhzctwd.supabase.co
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

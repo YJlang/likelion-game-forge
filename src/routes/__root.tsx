@@ -11,6 +11,7 @@ import {
 import appCss from "../styles.css?url";
 import { Navbar } from "@/components/Navbar";
 import { MiniScoreDock } from "@/components/MiniScoreDock";
+import { SupabaseSync } from "@/components/SupabaseSync";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -94,6 +95,7 @@ function RootComponent() {
         <main className="flex-1 mx-auto max-w-[1600px] w-full px-6 py-8 md:py-12 md:pr-[300px]">
           <Outlet />
         </main>
+        <SupabaseSync />
         <MiniScoreDock />
         <Toaster richColors position="top-center" />
       </div>

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { TEAMS, type TeamId, teamById } from "@/data/teams";
+import { type TeamId } from "@/data/teams";
 import { BigButton } from "./BigButton";
 import { ConfirmModal } from "./ConfirmModal";
 import {
@@ -8,6 +8,7 @@ import {
   SINGING_POINTS,
   GAME_LABEL,
   type GameKey,
+  type ScoreEntryType,
 } from "@/store/useGameStore";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -24,8 +25,8 @@ interface Props {
  */
 export function ResultsPanel({ game, singing = false }: Props) {
   const points = singing ? SINGING_POINTS : REGULAR_POINTS;
-  const apply = useGameStore((s) => s.applyScores);
-  const addMvp = useGameStore((s) => s.addMvp);
+  const applyScoresWithMvp = useGameStore((s) => s.applyScoresWithMvp);
+  const teams = useGameStore((s) => s.teams);
 
   const [ranks, setRanks] = useState<(TeamId | "")[]>(["", "", "", ""]);
   const [mvp, setMvp] = useState<TeamId | "">("");
@@ -73,27 +74,40 @@ export function ResultsPanel({ game, singing = false }: Props) {
 
   const valid = ranks.every((r) => r) && new Set(ranks).size === 4;
 
-  const handleApply = () => {
-    const entries: { team: TeamId; delta: number; reason: string }[] = [];
+  const handleApply = async () => {
+    const entries: { team: TeamId; delta: number; reason: string; entryType?: ScoreEntryType }[] =
+      [];
     (Object.keys(preview) as TeamId[]).forEach((tid) => {
       if (preview[tid].delta !== 0) {
         entries.push({
           team: tid,
           delta: preview[tid].delta,
           reason: preview[tid].reasons.join(" · "),
+          entryType:
+            singing && preview[tid].reasons.some((reason) => reason.includes("불참"))
+              ? "penalty"
+              : "ranking",
         });
       }
     });
-    const batchId = apply(game, entries);
-    if (mvp) addMvp(game, mvp, mvpPlayer || undefined, batchId);
-    toast.success(`${GAME_LABEL[game]} 점수가 반영됐습니다!`);
-    if (singing) {
-      confetti({
-        particleCount: 120,
-        spread: 90,
-        origin: { y: 0.6 },
-        colors: ["#F97316", "#FACC15", "#22C55E"],
-      });
+    try {
+      await applyScoresWithMvp(
+        game,
+        entries,
+        mvp ? { team: mvp, player: mvpPlayer || undefined } : undefined,
+      );
+      toast.success(`${GAME_LABEL[game]} 점수가 반영됐습니다!`);
+      if (singing) {
+        confetti({
+          particleCount: 120,
+          spread: 90,
+          origin: { y: 0.6 },
+          colors: ["#F97316", "#FACC15", "#22C55E"],
+        });
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "점수 반영 실패");
+      return;
     }
     setConfirmOpen(false);
     setRanks(["", "", "", ""]);
@@ -136,7 +150,7 @@ export function ResultsPanel({ game, singing = false }: Props) {
               }}
             >
               <option value="">선택</option>
-              {TEAMS.map((t) => (
+              {teams.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.emoji} {t.name} {t.leader}
                 </option>
@@ -154,7 +168,7 @@ export function ResultsPanel({ game, singing = false }: Props) {
               불참 팀 (각 -2점)
             </div>
             <div className="flex flex-wrap gap-2">
-              {TEAMS.map((t) => (
+              {teams.map((t) => (
                 <button
                   key={t.id}
                   onClick={() => setAbsent((a) => ({ ...a, [t.id]: !a[t.id] }))}
@@ -180,7 +194,7 @@ export function ResultsPanel({ game, singing = false }: Props) {
               onChange={(e) => setCrowd(e.target.value as TeamId | "")}
             >
               <option value="">선택 안 함</option>
-              {TEAMS.map((t) => (
+              {teams.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.emoji} {t.name}
                 </option>
@@ -202,7 +216,7 @@ export function ResultsPanel({ game, singing = false }: Props) {
             onChange={(e) => setMvp(e.target.value as TeamId | "")}
           >
             <option value="">선택 안 함</option>
-            {TEAMS.map((t) => (
+            {teams.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.emoji} {t.name}
               </option>
@@ -234,7 +248,7 @@ export function ResultsPanel({ game, singing = false }: Props) {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {(Object.keys(preview) as TeamId[]).map((tid) => {
-            const t = teamById(tid);
+            const t = teams.find((team) => team.id === tid)!;
             const p = preview[tid];
             return (
               <div key={tid} className="rounded-xl bg-card p-4 border border-border">
@@ -278,7 +292,7 @@ export function ResultsPanel({ game, singing = false }: Props) {
               {(Object.keys(preview) as TeamId[])
                 .filter((tid) => preview[tid].delta !== 0)
                 .map((tid) => {
-                  const t = teamById(tid);
+                  const t = teams.find((team) => team.id === tid)!;
                   const p = preview[tid];
                   return (
                     <div key={tid} className="flex items-center justify-between text-base">
@@ -298,7 +312,7 @@ export function ResultsPanel({ game, singing = false }: Props) {
           </div>
         }
         confirmLabel="네, 반영"
-        onConfirm={handleApply}
+        onConfirm={() => void handleApply()}
       />
     </div>
   );

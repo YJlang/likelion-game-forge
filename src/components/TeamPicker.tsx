@@ -1,5 +1,6 @@
-import { TEAMS, type TeamId, teamById } from "@/data/teams";
+import { type TeamId } from "@/data/teams";
 import { cn } from "@/lib/utils";
+import { useGameStore } from "@/store/useGameStore";
 
 interface Props {
   value: TeamId | null;
@@ -8,13 +9,14 @@ interface Props {
 }
 
 export function TeamPicker({ value, onChange, label = "참여 팀 선택" }: Props) {
+  const teams = useGameStore((s) => s.teams);
   return (
     <div>
       <div className="text-sm font-bold text-muted-foreground mb-2 uppercase tracking-wider">
         {label}
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {TEAMS.map((t) => {
+        {teams.map((t) => {
           const active = value === t.id;
           return (
             <button
@@ -47,5 +49,6 @@ export function TeamPicker({ value, onChange, label = "참여 팀 선택" }: Pro
 }
 
 export function teamColorStyle(id: TeamId): React.CSSProperties {
-  return { background: `var(--${teamById(id).colorVar})` };
+  const team = useGameStore.getState().teams.find((t) => t.id === id);
+  return { background: `var(--${team?.colorVar ?? "team-1"})` };
 }

@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { TEAMS } from "@/data/teams";
 import { SCHEDULE } from "@/data/schedule";
 import { useGameStore } from "@/store/useGameStore";
 import { motion } from "framer-motion";
@@ -19,6 +18,7 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const scores = useGameStore((s) => s.scores);
+  const teams = useGameStore((s) => s.teams);
 
   // current schedule item by time-of-day
   const now = new Date();
@@ -172,7 +172,7 @@ function Home() {
       <section>
         <h2 className="font-display text-4xl mb-6">👥 참가 팀</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {TEAMS.map((t) => (
+          {teams.map((t) => (
             <motion.div
               key={t.id}
               whileHover={{ y: -4, scale: 1.02 }}

@@ -7,7 +7,7 @@ import { TeamPicker } from "@/components/TeamPicker";
 import { Timer } from "@/components/Timer";
 import { useGameStore } from "@/store/useGameStore";
 import { CHARADES, type Charade } from "@/data/charades";
-import { TEAMS, type TeamId } from "@/data/teams";
+import { type TeamId } from "@/data/teams";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
@@ -22,6 +22,7 @@ function Charades() {
   const resetUsed = useGameStore((s) => s.resetUsed);
   const counts = useGameStore((s) => s.correctCounts.charades);
   const recordCorrect = useGameStore((s) => s.recordCorrect);
+  const teams = useGameStore((s) => s.teams);
   const [team, setTeam] = useState<TeamId | null>(null);
   const [current, setCurrent] = useState<Charade | null>(null);
   const [revealed, setRevealed] = useState(false);
@@ -33,12 +34,12 @@ function Charades() {
     const pick = remaining[Math.floor(Math.random() * remaining.length)];
     setCurrent(pick);
     setRevealed(false);
-    markUsed("charade", pick.id);
+    void markUsed("charade", pick.id, team);
   };
 
   const score = () => {
     if (!team) return toast.error("팀을 먼저 선택하세요");
-    recordCorrect("charades", team, "몸으로 말해요 정답 +1");
+    void recordCorrect("charades", team, "몸으로 말해요 정답 +1");
     toast.success("정답 +1");
     draw();
   };
@@ -85,7 +86,7 @@ function Charades() {
             </div>
             <button
               onClick={() => {
-                resetUsed("charade");
+                void resetUsed("charade");
                 toast.success("사용 키워드 초기화");
               }}
               className="text-xs text-muted-foreground underline"
@@ -156,7 +157,7 @@ function Charades() {
       <div className="rounded-3xl bg-card border border-border p-6">
         <h3 className="font-display text-2xl mb-4">📋 팀별 맞춘 개수</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {TEAMS.map((t) => (
+          {teams.map((t) => (
             <div key={t.id} className="rounded-xl bg-background/50 p-4">
               <div className="text-sm" style={{ color: `var(--${t.colorVar})` }}>
                 {t.emoji} {t.name} {t.leader}

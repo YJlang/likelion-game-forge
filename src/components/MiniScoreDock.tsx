@@ -1,10 +1,10 @@
 import { useGameStore } from "@/store/useGameStore";
-import { TEAMS } from "@/data/teams";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function MiniScoreDock() {
   const scores = useGameStore((s) => s.scores);
-  const sorted = [...TEAMS].sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0));
+  const teams = useGameStore((s) => s.teams);
+  const sorted = [...teams].sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0));
   return (
     <div className="fixed bottom-4 right-4 z-30 hidden md:block">
       <div className="glass rounded-2xl p-4 shadow-elegant border-2 border-primary/40 min-w-[260px]">

@@ -7,7 +7,7 @@ import { TeamPicker } from "@/components/TeamPicker";
 import { SlotReveal } from "@/components/SlotReveal";
 import { useGameStore } from "@/store/useGameStore";
 import { SONGS, type Song } from "@/data/songs";
-import { TEAMS, type TeamId } from "@/data/teams";
+import { type TeamId } from "@/data/teams";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
@@ -22,6 +22,7 @@ function Jukebox() {
   const resetUsed = useGameStore((s) => s.resetUsed);
   const counts = useGameStore((s) => s.correctCounts.jukebox);
   const recordCorrect = useGameStore((s) => s.recordCorrect);
+  const teams = useGameStore((s) => s.teams);
   const [team, setTeam] = useState<TeamId | null>(null);
   const [round, setRound] = useState(1);
   const [current, setCurrent] = useState<Song | null>(null);
@@ -37,20 +38,20 @@ function Jukebox() {
     const pick = remaining[Math.floor(Math.random() * remaining.length)];
     setCurrent(pick);
     setRevealed(false);
-    markUsed("song", pick.id);
+    void markUsed("song", pick.id, team);
   };
 
   const correct = () => {
     if (!team || !current) return;
-    recordCorrect("jukebox", team, "주크박스 정답 +1");
-    toast.success(`${TEAMS.find((t) => t.id === team)!.name} 정답!`);
+    void recordCorrect("jukebox", team, "주크박스 정답 +1");
+    toast.success(`${teams.find((t) => t.id === team)!.name} 정답!`);
     setRound((r) => r + 1);
     setCurrent(null);
     setRevealed(false);
   };
   const fail = () => {
     if (!team || !current) return;
-    toast(`${TEAMS.find((t) => t.id === team)!.name} 실패`);
+    toast(`${teams.find((t) => t.id === team)!.name} 실패`);
     setRound((r) => r + 1);
     setCurrent(null);
     setRevealed(false);
@@ -87,7 +88,7 @@ function Jukebox() {
             </div>
             <button
               onClick={() => {
-                resetUsed("song");
+                void resetUsed("song");
                 toast.success("사용된 곡 목록 초기화");
               }}
               className="text-xs text-muted-foreground underline"
@@ -186,7 +187,7 @@ function Jukebox() {
         <div className="rounded-3xl bg-card border-2 border-border p-6">
           <h3 className="font-display text-2xl mb-4">📋 팀별 정답 개수</h3>
           <div className="space-y-2">
-            {TEAMS.map((t) => (
+            {teams.map((t) => (
               <div
                 key={t.id}
                 className="flex items-center justify-between p-3 rounded-xl bg-background/50 border border-border"

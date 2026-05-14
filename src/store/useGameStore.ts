@@ -1,6 +1,17 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { TEAMS, type TeamId } from "@/data/teams";
+import { toast } from "sonner";
+import { DEFAULT_TEAMS, type TeamId, type TeamMeta } from "@/data/teams";
+import {
+  createRemoteScoreBatch,
+  isSupabaseConfigured,
+  loadRemoteGameState,
+  markRemoteItemUsed,
+  resetRemoteEvent,
+  resetRemoteUsedItems,
+  subscribeToRemoteGameChanges,
+  undoRemoteBatch,
+} from "@/lib/gameRepository";
 
 export type GameKey = "jukebox" | "charades" | "truthlie" | "reaction" | "singing";
 
@@ -31,7 +42,12 @@ export interface MvpLogEntry {
   at: number;
 }
 
+type UsedKind = "song" | "charade" | "reaction" | "truth";
+
 interface State {
+  eventId?: string;
+  teams: TeamMeta[];
+  teamDbIds: Partial<Record<TeamId, string>>;
   scores: Record<TeamId, number>;
   scoreLog: ScoreLogEntry[];
   mvpLog: MvpLogEntry[];
@@ -41,23 +57,39 @@ interface State {
   usedReactionIds: number[];
   usedTruthIds: number[];
   lastSavedAt: number;
+  syncStatus: "local" | "loading" | "synced" | "error";
+  syncError?: string;
 }
 
 interface Actions {
+  hydrateFromSupabase: () => Promise<void>;
   applyScores: (
     game: GameKey | "manual",
-    entries: { team: TeamId; delta: number; reason: string }[],
-  ) => string;
-  addMvp: (game: GameKey, team: TeamId, player?: string, scoreBatchId?: string) => void;
-  markUsed: (kind: "song" | "charade" | "reaction" | "truth", id: number) => void;
-  resetUsed: (kind: "song" | "charade" | "reaction" | "truth") => void;
-  resetAll: () => void;
-  manualAdjust: (team: TeamId, delta: number, reason: string) => void;
-  recordCorrect: (game: Exclude<GameKey, "singing">, team: TeamId, reason?: string) => void;
-  undoLastScoreBatch: () => boolean;
+    entries: { team: TeamId; delta: number; reason: string; entryType?: ScoreEntryType }[],
+  ) => Promise<string>;
+  applyScoresWithMvp: (
+    game: GameKey | "manual",
+    entries: { team: TeamId; delta: number; reason: string; entryType?: ScoreEntryType }[],
+    mvp?: { team: TeamId; player?: string },
+  ) => Promise<string>;
+  addMvp: (game: GameKey, team: TeamId, player?: string, scoreBatchId?: string) => Promise<void>;
+  markUsed: (kind: UsedKind, id: number, team?: TeamId | null) => Promise<void>;
+  resetUsed: (kind: UsedKind) => Promise<void>;
+  resetAll: () => Promise<void>;
+  manualAdjust: (team: TeamId, delta: number, reason: string) => Promise<void>;
+  recordCorrect: (
+    game: Exclude<GameKey, "singing">,
+    team: TeamId,
+    reason?: string,
+  ) => Promise<void>;
+  undoLastScoreBatch: () => Promise<boolean>;
 }
 
-const initialScores = TEAMS.reduce(
+export type ScoreEntryType = "correct" | "ranking" | "mvp" | "manual" | "penalty" | "crowd_bonus";
+
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+const initialScores = DEFAULT_TEAMS.reduce(
   (acc, t) => {
     acc[t.id] = 0;
     return acc;
@@ -68,6 +100,8 @@ const initialScores = TEAMS.reduce(
 const createTeamCounter = () => ({ ...initialScores });
 
 const initial: State = {
+  teams: DEFAULT_TEAMS,
+  teamDbIds: {},
   scores: { ...initialScores },
   scoreLog: [],
   mvpLog: [],
@@ -82,146 +116,253 @@ const initial: State = {
   usedReactionIds: [],
   usedTruthIds: [],
   lastSavedAt: Date.now(),
+  syncStatus: isSupabaseConfigured ? "loading" : "local",
 };
 
-const uid = () => Math.random().toString(36).slice(2, 10);
+function calculateCorrectCounts(scoreLog: ScoreLogEntry[]): State["correctCounts"] {
+  const counts: State["correctCounts"] = {
+    jukebox: createTeamCounter(),
+    charades: createTeamCounter(),
+    truthlie: createTeamCounter(),
+    reaction: createTeamCounter(),
+  };
+
+  for (const entry of scoreLog) {
+    if (
+      entry.game !== "manual" &&
+      entry.game !== "singing" &&
+      entry.reason.includes("정답") &&
+      entry.delta > 0
+    ) {
+      counts[entry.game][entry.team] += entry.delta;
+    }
+  }
+
+  return counts;
+}
+
+function usedKey(kind: UsedKind) {
+  return {
+    song: "usedSongIds",
+    charade: "usedCharadeIds",
+    reaction: "usedReactionIds",
+    truth: "usedTruthIds",
+  }[kind] as "usedSongIds" | "usedCharadeIds" | "usedReactionIds" | "usedTruthIds";
+}
+
+function applyLocalScores(
+  state: State,
+  game: GameKey | "manual",
+  batchId: string,
+  entries: { team: TeamId; delta: number; reason: string }[],
+) {
+  const scores = { ...state.scores };
+  const at = Date.now();
+  const scoreLog = [...state.scoreLog];
+
+  for (const entry of entries) {
+    scores[entry.team] = (scores[entry.team] ?? 0) + entry.delta;
+    scoreLog.push({
+      id: uid(),
+      batchId,
+      game,
+      team: entry.team,
+      delta: entry.delta,
+      reason: entry.reason,
+      at,
+    });
+  }
+
+  return {
+    scores,
+    scoreLog,
+    correctCounts: calculateCorrectCounts(scoreLog),
+    lastSavedAt: at,
+  };
+}
+
+async function refreshAfterRemoteWrite(set: (partial: Partial<State>) => void) {
+  const remote = await loadRemoteGameState();
+  set({ ...remote, correctCounts: calculateCorrectCounts(remote.scoreLog), syncStatus: "synced" });
+}
 
 export const useGameStore = create<State & Actions>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...initial,
-      applyScores: (game, entries) => {
+      hydrateFromSupabase: async () => {
+        if (!isSupabaseConfigured) {
+          set({ syncStatus: "local", syncError: undefined });
+          return;
+        }
+
+        set({ syncStatus: "loading", syncError: undefined });
+        try {
+          const remote = await loadRemoteGameState();
+          set({
+            ...remote,
+            correctCounts: calculateCorrectCounts(remote.scoreLog),
+            syncStatus: "synced",
+            syncError: undefined,
+          });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Supabase 동기화 실패";
+          set({ syncStatus: "error", syncError: message });
+          toast.error(message);
+        }
+      },
+      applyScores: async (game, entries) => {
+        return get().applyScoresWithMvp(game, entries);
+      },
+      applyScoresWithMvp: async (game, entries, mvp) => {
         const batchId = uid();
+        const state = get();
+
+        if (isSupabaseConfigured && state.eventId) {
+          const remoteBatchId = await createRemoteScoreBatch(
+            state.eventId,
+            state.teamDbIds as Record<TeamId, string>,
+            game,
+            entries,
+            mvp && game !== "manual" ? { game, team: mvp.team, player: mvp.player } : undefined,
+          );
+          await refreshAfterRemoteWrite(set);
+          return remoteBatchId;
+        }
+
         set((s) => {
-          const scores = { ...s.scores };
-          const log = [...s.scoreLog];
-          const at = Date.now();
-          for (const e of entries) {
-            scores[e.team] = (scores[e.team] ?? 0) + e.delta;
-            log.push({
-              id: uid(),
-              batchId,
-              game,
-              team: e.team,
-              delta: e.delta,
-              reason: e.reason,
-              at,
-            });
-          }
-          return { scores, scoreLog: log, lastSavedAt: at };
+          const next = applyLocalScores(s, game, batchId, entries);
+          return mvp
+            ? {
+                ...next,
+                mvpLog: [
+                  ...s.mvpLog,
+                  {
+                    id: uid(),
+                    scoreBatchId: batchId,
+                    game: game === "manual" ? "jukebox" : game,
+                    team: mvp.team,
+                    player: mvp.player,
+                    at: Date.now(),
+                  },
+                ],
+              }
+            : next;
         });
         return batchId;
       },
-      addMvp: (game, team, player, scoreBatchId) =>
+      addMvp: async (game, team, player, scoreBatchId) => {
         set((s) => ({
           mvpLog: [...s.mvpLog, { id: uid(), scoreBatchId, game, team, player, at: Date.now() }],
           lastSavedAt: Date.now(),
-        })),
-      markUsed: (kind, id) =>
-        set((s) => {
-          const map = {
-            song: "usedSongIds",
-            charade: "usedCharadeIds",
-            reaction: "usedReactionIds",
-            truth: "usedTruthIds",
-          } as const;
-          const key = map[kind];
-          const arr = s[key];
-          if (arr.includes(id)) return s;
-          return { [key]: [...arr, id], lastSavedAt: Date.now() } as Partial<State> as State;
-        }),
-      resetUsed: (kind) =>
-        set(() => {
-          const map = {
-            song: "usedSongIds",
-            charade: "usedCharadeIds",
-            reaction: "usedReactionIds",
-            truth: "usedTruthIds",
-          } as const;
-          return { [map[kind]]: [], lastSavedAt: Date.now() } as Partial<State> as State;
-        }),
-      resetAll: () => set({ ...initial, lastSavedAt: Date.now() }),
-      manualAdjust: (team, delta, reason) =>
-        set((s) => {
-          const at = Date.now();
-          const batchId = uid();
-          return {
-            scores: { ...s.scores, [team]: (s.scores[team] ?? 0) + delta },
-            scoreLog: [
-              ...s.scoreLog,
-              { id: uid(), batchId, game: "manual", team, delta, reason, at },
-            ],
-            lastSavedAt: at,
-          };
-        }),
-      recordCorrect: (game, team, reason = "정답 +1") =>
-        set((s) => {
-          const at = Date.now();
-          const batchId = uid();
-          return {
-            scores: { ...s.scores, [team]: (s.scores[team] ?? 0) + 1 },
-            correctCounts: {
-              ...s.correctCounts,
-              [game]: {
-                ...s.correctCounts[game],
-                [team]: (s.correctCounts[game][team] ?? 0) + 1,
-              },
-            },
-            scoreLog: [...s.scoreLog, { id: uid(), batchId, game, team, delta: 1, reason, at }],
-            lastSavedAt: at,
-          };
-        }),
-      undoLastScoreBatch: () => {
-        let undone = false;
-        set((s) => {
-          const last = s.scoreLog.at(-1);
-          if (!last) return s;
+        }));
+      },
+      markUsed: async (kind, id, team) => {
+        const state = get();
+        const key = usedKey(kind);
+        if (state[key].includes(id)) return;
 
-          const entries = last.batchId
-            ? s.scoreLog.filter((entry) => entry.batchId === last.batchId)
-            : s.scoreLog.filter((entry) => entry.at === last.at);
+        if (isSupabaseConfigured && state.eventId) {
+          await markRemoteItemUsed(
+            state.eventId,
+            state.teamDbIds as Record<TeamId, string>,
+            kind,
+            id,
+            team,
+          );
+          await refreshAfterRemoteWrite(set);
+          return;
+        }
 
-          if (!entries.length) return s;
+        set((s) => ({ [key]: [...s[key], id], lastSavedAt: Date.now() }) as Partial<State>);
+      },
+      resetUsed: async (kind) => {
+        const state = get();
+        const key = usedKey(kind);
 
-          const entryIds = new Set(entries.map((entry) => entry.id));
-          const batchId = last.batchId;
+        if (isSupabaseConfigured && state.eventId) {
+          await resetRemoteUsedItems(state.eventId, kind);
+          await refreshAfterRemoteWrite(set);
+          return;
+        }
+
+        set({ [key]: [], lastSavedAt: Date.now() } as Partial<State>);
+      },
+      resetAll: async () => {
+        const state = get();
+
+        if (isSupabaseConfigured && state.eventId) {
+          await resetRemoteEvent(state.eventId);
+          await refreshAfterRemoteWrite(set);
+          return;
+        }
+
+        set({ ...initial, lastSavedAt: Date.now(), syncStatus: state.syncStatus });
+      },
+      manualAdjust: async (team, delta, reason) => {
+        await get().applyScores("manual", [{ team, delta, reason, entryType: "manual" }]);
+      },
+      recordCorrect: async (game, team, reason = "정답 +1") => {
+        await get().applyScores(game, [{ team, delta: 1, reason, entryType: "correct" }]);
+      },
+      undoLastScoreBatch: async () => {
+        const state = get();
+        const last = state.scoreLog.at(-1);
+        if (!last?.batchId) return false;
+
+        if (isSupabaseConfigured && state.eventId) {
+          await undoRemoteBatch(last.batchId);
+          await refreshAfterRemoteWrite(set);
+          return true;
+        }
+
+        const entries = state.scoreLog.filter((entry) => entry.batchId === last.batchId);
+        if (!entries.length) return false;
+        const entryIds = new Set(entries.map((entry) => entry.id));
+
+        set((s) => {
           const scores = { ...s.scores };
-          const correctCounts = {
-            jukebox: { ...s.correctCounts.jukebox },
-            charades: { ...s.correctCounts.charades },
-            truthlie: { ...s.correctCounts.truthlie },
-            reaction: { ...s.correctCounts.reaction },
-          };
-
           for (const entry of entries) {
             scores[entry.team] = (scores[entry.team] ?? 0) - entry.delta;
-            if (
-              entry.reason.includes("정답") &&
-              entry.game !== "manual" &&
-              entry.game !== "singing"
-            ) {
-              correctCounts[entry.game][entry.team] = Math.max(
-                0,
-                (correctCounts[entry.game][entry.team] ?? 0) - entry.delta,
-              );
-            }
           }
-
-          undone = true;
+          const scoreLog = s.scoreLog.filter((entry) => !entryIds.has(entry.id));
           return {
             scores,
-            correctCounts,
-            scoreLog: s.scoreLog.filter((entry) => !entryIds.has(entry.id)),
-            mvpLog: batchId ? s.mvpLog.filter((entry) => entry.scoreBatchId !== batchId) : s.mvpLog,
+            scoreLog,
+            correctCounts: calculateCorrectCounts(scoreLog),
+            mvpLog: s.mvpLog.filter((entry) => entry.scoreBatchId !== last.batchId),
             lastSavedAt: Date.now(),
           };
         });
-        return undone;
+        return true;
       },
     }),
-    { name: "mt-likelion-v1" },
+    {
+      name: "mt-likelion-v1",
+      partialize: (state) => ({
+        eventId: state.eventId,
+        teams: state.teams,
+        teamDbIds: state.teamDbIds,
+        scores: state.scores,
+        scoreLog: state.scoreLog,
+        mvpLog: state.mvpLog,
+        correctCounts: state.correctCounts,
+        usedSongIds: state.usedSongIds,
+        usedCharadeIds: state.usedCharadeIds,
+        usedReactionIds: state.usedReactionIds,
+        usedTruthIds: state.usedTruthIds,
+        lastSavedAt: state.lastSavedAt,
+      }),
+    },
   ),
 );
+
+export function startSupabaseGameSync() {
+  void useGameStore.getState().hydrateFromSupabase();
+  return subscribeToRemoteGameChanges(() => {
+    void useGameStore.getState().hydrateFromSupabase();
+  });
+}
 
 export const REGULAR_POINTS = [4, 3, 2, 1];
 export const SINGING_POINTS = [6, 4, 2, 1];

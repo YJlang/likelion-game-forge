@@ -5,7 +5,7 @@ import { BigButton } from "@/components/BigButton";
 import { ResultsPanel } from "@/components/ResultsPanel";
 import { useGameStore } from "@/store/useGameStore";
 import { TRUTH_LIES } from "@/data/truthlie";
-import { TEAMS, type TeamId } from "@/data/teams";
+import { type TeamId } from "@/data/teams";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
@@ -20,6 +20,7 @@ function TruthLie() {
   const resetUsed = useGameStore((s) => s.resetUsed);
   const counts = useGameStore((s) => s.correctCounts.truthlie);
   const recordCorrect = useGameStore((s) => s.recordCorrect);
+  const teams = useGameStore((s) => s.teams);
 
   const [revealed, setRevealed] = useState(false);
   const [qNum, setQNum] = useState(1);
@@ -38,13 +39,13 @@ function TruthLie() {
     const pick = pool[Math.floor(Math.random() * pool.length)];
     setCurrent(pick);
     setRevealed(false);
-    markUsed("truth", pick.id);
+    void markUsed("truth", pick.id);
     setCorrect({ team1: false, team2: false, team3: false, team4: false });
   };
 
   const next = () => {
     (Object.keys(correct) as TeamId[]).forEach((tid) => {
-      if (correct[tid]) recordCorrect("truthlie", tid, "진실/거짓 정답 +1");
+      if (correct[tid]) void recordCorrect("truthlie", tid, "진실/거짓 정답 +1");
     });
     setQNum((n) => n + 1);
     draw();
@@ -78,7 +79,7 @@ function TruthLie() {
           </div>
           <button
             onClick={() => {
-              resetUsed("truth");
+              void resetUsed("truth");
               toast.success("문제 풀 초기화");
             }}
             className="text-xs text-muted-foreground underline"
@@ -139,7 +140,7 @@ function TruthLie() {
             팀별 정답 체크
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {TEAMS.map((t) => (
+            {teams.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setCorrect((c) => ({ ...c, [t.id]: !c[t.id] }))}
@@ -166,7 +167,7 @@ function TruthLie() {
       <div className="rounded-3xl bg-card border border-border p-6">
         <h3 className="font-display text-2xl mb-4">📋 팀별 누적 정답</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {TEAMS.map((t) => (
+          {teams.map((t) => (
             <div key={t.id} className="rounded-xl bg-background/50 p-4">
               <div className="text-sm" style={{ color: `var(--${t.colorVar})` }}>
                 {t.emoji} {t.name}

@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { TEAMS } from "@/data/teams";
 import { useGameStore, GAME_LABEL } from "@/store/useGameStore";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,7 +30,8 @@ function fireBigConfetti() {
 function Final() {
   const scores = useGameStore((s) => s.scores);
   const mvpLog = useGameStore((s) => s.mvpLog);
-  const sorted = [...TEAMS].sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0));
+  const teams = useGameStore((s) => s.teams);
+  const sorted = [...teams].sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0));
   const winner = sorted[0];
 
   type Phase = "idle" | "countdown" | "reveal";
@@ -199,7 +199,7 @@ function Final() {
               ) : (
                 <ul className="space-y-2">
                   {mvpLog.map((m) => {
-                    const t = TEAMS.find((x) => x.id === m.team)!;
+                    const t = teams.find((x) => x.id === m.team)!;
                     return (
                       <li
                         key={m.id}

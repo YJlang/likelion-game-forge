@@ -7,7 +7,7 @@ import { TeamPicker } from "@/components/TeamPicker";
 import { Timer } from "@/components/Timer";
 import { useGameStore } from "@/store/useGameStore";
 import { REACTIONS, type ReactionAction } from "@/data/reactions";
-import { TEAMS, type TeamId } from "@/data/teams";
+import { type TeamId } from "@/data/teams";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
@@ -22,6 +22,7 @@ function Reaction() {
   const resetUsed = useGameStore((s) => s.resetUsed);
   const counts = useGameStore((s) => s.correctCounts.reaction);
   const recordCorrect = useGameStore((s) => s.recordCorrect);
+  const teams = useGameStore((s) => s.teams);
   const [team, setTeam] = useState<TeamId | null>(null);
   const [guesser, setGuesser] = useState("");
   const [current, setCurrent] = useState<ReactionAction | null>(null);
@@ -41,7 +42,7 @@ function Reaction() {
     const pick = remaining[Math.floor(Math.random() * remaining.length)];
     setCurrent(pick);
     setRevealed(false);
-    markUsed("reaction", pick.id);
+    void markUsed("reaction", pick.id, team);
     setStartedAt(Date.now());
   };
 
@@ -49,7 +50,7 @@ function Reaction() {
     if (!team) return toast.error("팀을 먼저 선택하세요");
     const sec = startedAt ? (Date.now() - startedAt) / 1000 : 0;
     setResults((r) => ({ ...r, [team]: { ok: true, sec: Math.round(sec * 10) / 10 } }));
-    recordCorrect("reaction", team, `반응 행동 정답 +1 (${sec.toFixed(1)}초)`);
+    void recordCorrect("reaction", team, `반응 행동 정답 +1 (${sec.toFixed(1)}초)`);
     toast.success(`성공! ${sec.toFixed(1)}초`);
   };
   const failTeam = () => {
@@ -115,7 +116,7 @@ function Reaction() {
             </div>
             <button
               onClick={() => {
-                resetUsed("reaction");
+                void resetUsed("reaction");
                 toast.success("주제 풀 초기화");
               }}
               className="text-xs text-muted-foreground underline"
@@ -180,7 +181,7 @@ function Reaction() {
       <div className="rounded-3xl bg-card border border-border p-6">
         <h3 className="font-display text-2xl mb-4">📋 팀별 결과</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {TEAMS.map((t) => {
+          {teams.map((t) => {
             const r = results[t.id];
             return (
               <div key={t.id} className="rounded-xl bg-background/50 p-4">

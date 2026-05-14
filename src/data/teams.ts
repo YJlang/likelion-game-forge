@@ -2,6 +2,7 @@ export type TeamId = "team1" | "team2" | "team3" | "team4";
 
 export interface TeamMeta {
   id: TeamId;
+  dbId?: string;
   name: string;
   leader: string;
   members: string[];
@@ -9,7 +10,7 @@ export interface TeamMeta {
   emoji: string;
 }
 
-export const TEAMS: TeamMeta[] = [
+export const DEFAULT_TEAMS: TeamMeta[] = [
   {
     id: "team1",
     name: "1팀",
@@ -44,4 +45,5 @@ export const TEAMS: TeamMeta[] = [
   },
 ];
 
+export const TEAMS = DEFAULT_TEAMS;
 export const teamById = (id: TeamId) => TEAMS.find((t) => t.id === id)!;
