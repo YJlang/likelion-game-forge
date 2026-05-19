@@ -7,6 +7,9 @@ const repositoryBasePath = "/likelion-game-forge/";
 
 export default defineConfig({
   base: repositoryBasePath,
+  define: {
+    "import.meta.env.VITE_ROUTER_HISTORY": JSON.stringify("hash"),
+  },
   plugins: [react(), tailwindcss(), tsConfigPaths()],
   build: {
     outDir: "dist/pages",

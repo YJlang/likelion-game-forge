@@ -5,8 +5,14 @@ import { RouterProvider } from "@tanstack/react-router";
 import "./styles.css";
 import { getRouter } from "./router";
 
-const basepath = import.meta.env.BASE_URL.replace(/\/$/, "") || undefined;
-const router = getRouter(basepath);
+const useHashHistory = import.meta.env.VITE_ROUTER_HISTORY === "hash";
+const basepath = useHashHistory
+  ? undefined
+  : import.meta.env.BASE_URL.replace(/\/$/, "") || undefined;
+const router = getRouter({
+  basepath,
+  historyMode: useHashHistory ? "hash" : "browser",
+});
 const rootElement = document.getElementById("root");
 
 if (!rootElement) {
