@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/reaction")({
-  head: () => ({ meta: [{ title: "게임4. 반응으로 행동 맞추기 — LIKELION MT" }] }),
+  head: () => ({ meta: [{ title: "게임4. 반응 행동 뽑기 - LIKELION MT" }] }),
   component: Reaction,
 });
 
@@ -38,7 +38,8 @@ function Reaction() {
   const remaining = useMemo(() => REACTIONS.filter((r) => !used.includes(r.id)), [used]);
 
   const draw = () => {
-    if (!remaining.length) return toast.error("남은 주제가 없습니다.");
+    if (!team) return toast.error("먼저 참여 팀을 선택하세요.");
+    if (!remaining.length) return toast.error("남은 행동 주제가 없습니다. 목록을 초기화해 주세요.");
     const pick = remaining[Math.floor(Math.random() * remaining.length)];
     setCurrent(pick);
     setRevealed(false);
@@ -47,14 +48,17 @@ function Reaction() {
   };
 
   const succeed = () => {
-    if (!team) return toast.error("팀을 먼저 선택하세요");
+    if (!team) return toast.error("팀을 먼저 선택하세요.");
+    if (!current) return toast.error("먼저 행동 주제를 뽑아 주세요.");
     const sec = startedAt ? (Date.now() - startedAt) / 1000 : 0;
     setResults((r) => ({ ...r, [team]: { ok: true, sec: Math.round(sec * 10) / 10 } }));
     void recordCorrect("reaction", team, `반응 행동 정답 +1 (${sec.toFixed(1)}초)`);
     toast.success(`성공! ${sec.toFixed(1)}초`);
   };
+
   const failTeam = () => {
-    if (!team) return toast.error("팀을 먼저 선택하세요");
+    if (!team) return toast.error("팀을 먼저 선택하세요.");
+    if (!current) return toast.error("먼저 행동 주제를 뽑아 주세요.");
     setResults((r) => ({ ...r, [team]: { ok: false, sec: null } }));
     toast.error("실패");
   };
@@ -62,32 +66,34 @@ function Reaction() {
   return (
     <div className="space-y-8">
       <GameHeader
-        title="게임4. 반응으로 행동 맞추기"
-        subtitle="환호와 야유만으로 행동을 추측합니다!"
+        title="게임4. 반응 행동 뽑기"
+        subtitle="주어진 행동을 말 없이 보여주고, 추측자가 맞히는 게임입니다."
         badge={
           <span className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-bold">
-            🎭 게임 4
+            🎬 게임 4
           </span>
         }
-        steps={["팀/추측자 선정", "주제 뽑기", "성공/실패 입력"]}
+        steps={["팀/추측자 설정", "행동 뽑기", "성공/실패 입력"]}
         currentStep={!team ? 0 : !current ? 1 : 2}
         rules={
           <ul className="list-disc pl-5 space-y-1">
-            <li>한 명을 추측자로 선정, 나머지는 주제 확인.</li>
-            <li>맞으면 환호 / 틀리면 야유. 말은 절대 금지!</li>
-            <li>제한 3분, 빠르게 맞춘 팀이 높은 순위.</li>
+            <li>팀마다 추측자 1명을 정하고, 나머지 팀원은 행동을 말 없이 표현합니다.</li>
+            <li>운영진만 행동 주제를 확인한 뒤, 시작 신호에 맞춰 진행합니다.</li>
+            <li>
+              정답을 맞히면 즉시 +1점이 기록됩니다. 순위 점수는 아래 패널에서 따로 반영하세요.
+            </li>
           </ul>
         }
       />
 
       <div className="rounded-2xl border-2 border-accent bg-accent/10 p-5 text-center">
         <div className="font-display text-3xl text-accent">
-          📣 룰: 말 절대 금지! 환호 ✨ 야유 🙅 만 가능
+          난이도 없이 바로 뽑기! 행동은 짧고 크게, 말은 금지!
         </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        <TeamPicker value={team} onChange={setTeam} label="현재 차례 팀" />
+        <TeamPicker value={team} onChange={setTeam} label="현재 참여 팀" />
         <div>
           <div className="text-sm font-bold text-muted-foreground mb-2 uppercase tracking-wider">
             추측자 이름
@@ -104,7 +110,7 @@ function Reaction() {
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="rounded-3xl bg-card border border-border p-8 flex flex-col items-center justify-center">
           <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-4">
-            ⏱ 3분 타이머
+            3분 타이머
           </div>
           <Timer durationSec={180} size="xl" />
         </div>
@@ -112,12 +118,12 @@ function Reaction() {
         <div className="rounded-3xl bg-card border border-border p-8 space-y-5">
           <div className="flex items-center justify-between">
             <div className="text-sm uppercase tracking-widest text-muted-foreground font-bold">
-              남은 {remaining.length}/{REACTIONS.length}
+              남은 행동 {remaining.length}/{REACTIONS.length}
             </div>
             <button
               onClick={() => {
                 void resetUsed("reaction");
-                toast.success("주제 풀 초기화");
+                toast.success("행동 목록을 초기화했습니다.");
               }}
               className="text-xs text-muted-foreground underline"
             >
@@ -125,8 +131,8 @@ function Reaction() {
             </button>
           </div>
 
-          <BigButton size="xl" className="w-full" onClick={draw}>
-            🎰 행동 주제 뽑기
+          <BigButton size="xl" className="w-full" onClick={draw} disabled={!team}>
+            🎟️ 행동 주제 뽑기
           </BigButton>
 
           <AnimatePresence mode="wait">
@@ -135,24 +141,25 @@ function Reaction() {
                 key={current.id}
                 initial={{ scale: 0.5, opacity: 0, rotate: -4 }}
                 animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                exit={{ scale: 0.85, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 220, damping: 16 }}
                 className="rounded-2xl border-2 border-primary glow-primary bg-background/50 p-6 text-center"
               >
                 <div className="text-sm text-muted-foreground font-bold uppercase tracking-widest">
-                  난이도 {current.difficulty}
+                  뽑힌 행동
                 </div>
                 {revealed ? (
                   <motion.div
                     initial={{ scale: 0.7, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="font-display text-4xl md:text-6xl text-accent mt-3"
+                    className="font-display text-5xl md:text-7xl text-accent mt-3"
                     style={{ textShadow: "0 0 30px var(--accent)" }}
                   >
                     {current.action}
                   </motion.div>
                 ) : (
                   <div className="font-display text-6xl text-muted-foreground/40 mt-3 tracking-widest">
-                    ● ● ● ● ●
+                    ??????
                   </div>
                 )}
                 <BigButton
@@ -161,7 +168,7 @@ function Reaction() {
                   variant={revealed ? "ghost" : "accent"}
                   onClick={() => setRevealed((r) => !r)}
                 >
-                  {revealed ? "🙈 주제 숨기기" : "👀 주제 공개 (운영진만)"}
+                  {revealed ? "주제 숨기기" : "주제 공개 (운영진만)"}
                 </BigButton>
               </motion.div>
             )}
@@ -169,17 +176,17 @@ function Reaction() {
 
           <div className="grid grid-cols-2 gap-3">
             <BigButton variant="success" size="lg" onClick={succeed}>
-              ✅ 성공 (시간 기록)
+              성공 (시간 기록)
             </BigButton>
             <BigButton variant="danger" size="lg" onClick={failTeam}>
-              ❌ 실패
+              실패
             </BigButton>
           </div>
         </div>
       </div>
 
       <div className="rounded-3xl bg-card border border-border p-6">
-        <h3 className="font-display text-2xl mb-4">📋 팀별 결과</h3>
+        <h3 className="font-display text-2xl mb-4">팀별 결과</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {teams.map((t) => {
             const r = results[t.id];
@@ -189,17 +196,23 @@ function Reaction() {
                   {t.emoji} {t.name}
                 </div>
                 <div
-                  className={`font-display text-3xl mt-1 tabular-nums ${r.ok ? "text-success" : r.sec === null ? "text-muted-foreground" : "text-destructive"}`}
+                  className={`font-display text-3xl mt-1 tabular-nums ${
+                    r.ok
+                      ? "text-success"
+                      : r.sec === null
+                        ? "text-muted-foreground"
+                        : "text-destructive"
+                  }`}
                 >
-                  {r.ok ? `${r.sec}s` : r.sec === null ? "—" : "실패"}
+                  {r.ok ? `${r.sec}s` : r.sec === null ? "-" : "실패"}
                 </div>
-                <div className="text-xs text-muted-foreground mt-1">정답 {counts[t.id] ?? 0}회</div>
+                <div className="text-xs text-muted-foreground mt-1">정답 {counts[t.id] ?? 0}개</div>
               </div>
             );
           })}
         </div>
         <p className="text-sm text-muted-foreground mt-3">
-          추측자: <span className="font-bold text-foreground">{guesser || "—"}</span>
+          추측자 <span className="font-bold text-foreground">{guesser || "-"}</span>
         </p>
       </div>
 

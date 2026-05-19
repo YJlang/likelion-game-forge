@@ -34,12 +34,12 @@ function Final() {
   const sorted = [...teams].sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0));
   const winner = sorted[0];
 
-  type Phase = "idle" | "countdown" | "reveal";
+  type Phase = "idle" | "countdown" | "reveal" | "chinbaCountdown" | "chinbaReveal";
   const [phase, setPhase] = useState<Phase>("idle");
   const [count, setCount] = useState(3);
 
-  const start = () => {
-    setPhase("countdown");
+  const startCountdown = (nextPhase: Extract<Phase, "reveal" | "chinbaReveal">) => {
+    setPhase(nextPhase === "reveal" ? "countdown" : "chinbaCountdown");
     setCount(5);
     let n = 5;
     const iv = setInterval(() => {
@@ -47,9 +47,11 @@ function Final() {
       setCount(n);
       if (n <= 0) {
         clearInterval(iv);
-        setPhase("reveal");
+        setPhase(nextPhase);
         fireBigConfetti();
-        setTimeout(() => fireBigConfetti(), 1500);
+        if (nextPhase === "reveal") {
+          setTimeout(() => fireBigConfetti(), 1500);
+        }
       }
     }, 900);
   };
@@ -75,13 +77,17 @@ function Final() {
               두구두구두구...
             </div>
             <div className="text-muted-foreground text-lg">준비되면 결과를 공개하세요</div>
-            <BigButton size="xl" onClick={start} className="animate-pulse-glow">
+            <BigButton
+              size="xl"
+              onClick={() => startCountdown("reveal")}
+              className="animate-pulse-glow"
+            >
               🎉 결과 공개!
             </BigButton>
           </motion.div>
         )}
 
-        {phase === "countdown" && (
+        {(phase === "countdown" || phase === "chinbaCountdown") && (
           <motion.div
             key={`cd-${count}`}
             initial={{ scale: 0, rotate: -25, opacity: 0 }}
@@ -97,7 +103,7 @@ function Final() {
                 textShadow: `0 0 80px ${count > 0 ? "var(--accent)" : "var(--primary)"}`,
               }}
             >
-              {count > 0 ? count : "GO!"}
+              {count > 0 ? count : phase === "chinbaCountdown" ? "NEXT!" : "GO!"}
             </div>
           </motion.div>
         )}
@@ -219,6 +225,87 @@ function Final() {
             <div className="text-center pt-6">
               <p className="font-display text-4xl md:text-6xl text-primary">
                 모두 수고하셨습니다! 🦁
+              </p>
+              <BigButton
+                size="xl"
+                className="mt-8 animate-pulse-glow"
+                onClick={() => startCountdown("chinbaReveal")}
+              >
+                친해지길 바래 1등팀 발표
+              </BigButton>
+            </div>
+          </motion.div>
+        )}
+
+        {phase === "chinbaReveal" && (
+          <motion.div
+            key="chinba"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-10"
+          >
+            <motion.div
+              initial={{ scale: 0.35, rotate: 8, opacity: 0 }}
+              animate={{ scale: 1, rotate: 0, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 180, damping: 14 }}
+              className="relative overflow-hidden rounded-3xl border-4 border-primary p-10 md:p-20 text-center bg-card glow-primary"
+            >
+              <motion.div
+                animate={{ opacity: [0.25, 0.55, 0.25] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    "radial-gradient(circle, var(--primary), transparent 68%), radial-gradient(circle at 80% 20%, var(--accent), transparent 45%)",
+                }}
+              />
+              <motion.div
+                animate={{ rotate: -360 }}
+                transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 pointer-events-none opacity-20"
+                style={{
+                  background:
+                    "conic-gradient(from 45deg, transparent 0deg, var(--primary) 28deg, transparent 56deg, transparent 180deg, var(--accent) 208deg, transparent 236deg)",
+                }}
+              />
+
+              <div className="relative">
+                <motion.div
+                  initial={{ y: -30, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="font-display text-4xl md:text-5xl text-accent"
+                >
+                  🤝 친해지길 바래
+                </motion.div>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.65, type: "spring", stiffness: 180 }}
+                  className="text-display text-7xl md:text-[170px] mt-4 leading-none"
+                  style={{ textShadow: "0 0 60px var(--primary)" }}
+                >
+                  1등팀 발표
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.05 }}
+                  className="mt-10 rounded-2xl border-2 border-accent bg-accent/10 p-8"
+                >
+                  <div className="font-display text-5xl md:text-7xl text-accent animate-shake">
+                    두구두구두구...
+                  </div>
+                  <div className="mt-5 text-xl md:text-2xl text-foreground/85">
+                    친바 1등팀은 현장 집계 후 이 화면에서 발표하면 됩니다.
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+
+            <div className="text-center pt-6">
+              <p className="font-display text-4xl md:text-6xl text-primary">
+                MT 레크 + 친바 발표 준비 완료!
               </p>
               <BigButton
                 variant="ghost"

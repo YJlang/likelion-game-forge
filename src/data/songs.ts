@@ -7,6 +7,9 @@ export interface Song {
   youtubeUrl: string;
 }
 
+const youtubeSearch = (...terms: string[]) =>
+  `https://www.youtube.com/results?search_query=${encodeURIComponent(terms.join(" "))}`;
+
 export const SONGS: Song[] = [
   {
     id: 1,
@@ -14,7 +17,7 @@ export const SONGS: Song[] = [
     genre: "K-POP",
     title: "Bad Girl Good Girl",
     artist: "미스에이",
-    youtubeUrl: "https://www.youtube.com/results?search_query=miss+a+bad+girl+good+girl",
+    youtubeUrl: youtubeSearch("미스에이", "Bad Girl Good Girl"),
   },
   {
     id: 2,
@@ -22,7 +25,7 @@ export const SONGS: Song[] = [
     genre: "국내 발라드",
     title: "잊지말아요",
     artist: "백지영",
-    youtubeUrl: "https://www.youtube.com/results?search_query=백지영+잊지말아요",
+    youtubeUrl: youtubeSearch("백지영", "잊지말아요"),
   },
   {
     id: 3,
@@ -30,7 +33,7 @@ export const SONGS: Song[] = [
     genre: "K-POP",
     title: "강남스타일",
     artist: "PSY",
-    youtubeUrl: "https://www.youtube.com/results?search_query=psy+gangnam+style",
+    youtubeUrl: youtubeSearch("PSY", "강남스타일"),
   },
   {
     id: 4,
@@ -38,7 +41,7 @@ export const SONGS: Song[] = [
     genre: "국내 힙합",
     title: "0(영)",
     artist: "타이거JK",
-    youtubeUrl: "https://www.youtube.com/results?search_query=타이거jk+0+영",
+    youtubeUrl: youtubeSearch("타이거JK", "0 영"),
   },
   {
     id: 5,
@@ -46,7 +49,7 @@ export const SONGS: Song[] = [
     genre: "국내 알앤비",
     title: "썸",
     artist: "소유x정기고",
-    youtubeUrl: "https://www.youtube.com/results?search_query=소유+정기고+썸",
+    youtubeUrl: youtubeSearch("소유", "정기고", "썸"),
   },
   {
     id: 6,
@@ -54,7 +57,7 @@ export const SONGS: Song[] = [
     genre: "K-POP",
     title: "뱅뱅뱅",
     artist: "BIGBANG",
-    youtubeUrl: "https://www.youtube.com/results?search_query=빅뱅+뱅뱅뱅",
+    youtubeUrl: youtubeSearch("BIGBANG", "뱅뱅뱅"),
   },
   {
     id: 7,
@@ -62,7 +65,7 @@ export const SONGS: Song[] = [
     genre: "국내 발라드",
     title: "이젠 잊기로 해요",
     artist: "한동근",
-    youtubeUrl: "https://www.youtube.com/results?search_query=한동근+이젠+잊기로+해요",
+    youtubeUrl: youtubeSearch("한동근", "이젠 잊기로 해요"),
   },
   {
     id: 8,
@@ -70,7 +73,7 @@ export const SONGS: Song[] = [
     genre: "K-POP",
     title: "Knock Knock",
     artist: "TWICE",
-    youtubeUrl: "https://www.youtube.com/results?search_query=twice+knock+knock",
+    youtubeUrl: youtubeSearch("TWICE", "Knock Knock"),
   },
   {
     id: 9,
@@ -78,7 +81,7 @@ export const SONGS: Song[] = [
     genre: "K-POP",
     title: "Love Scenario",
     artist: "iKON",
-    youtubeUrl: "https://www.youtube.com/results?search_query=ikon+love+scenario",
+    youtubeUrl: youtubeSearch("iKON", "Love Scenario"),
   },
   {
     id: 10,
@@ -86,7 +89,7 @@ export const SONGS: Song[] = [
     genre: "국내 힙합",
     title: "shoong!",
     artist: "더블랙스킬츠",
-    youtubeUrl: "https://www.youtube.com/results?search_query=k+hip+hop+2018",
+    youtubeUrl: youtubeSearch("더블랙스킬츠", "shoong!"),
   },
   {
     id: 11,
@@ -94,7 +97,7 @@ export const SONGS: Song[] = [
     genre: "국내 발라드",
     title: "사랑에 연습이 있었다면",
     artist: "임재현",
-    youtubeUrl: "https://www.youtube.com/results?search_query=임재현+사랑에+연습이+있었다면",
+    youtubeUrl: youtubeSearch("임재현", "사랑에 연습이 있었다면"),
   },
   {
     id: 12,
@@ -102,7 +105,7 @@ export const SONGS: Song[] = [
     genre: "K-POP",
     title: "Dynamite",
     artist: "BTS",
-    youtubeUrl: "https://www.youtube.com/results?search_query=bts+dynamite",
+    youtubeUrl: youtubeSearch("BTS", "Dynamite"),
   },
   {
     id: 13,
@@ -110,7 +113,7 @@ export const SONGS: Song[] = [
     genre: "국내 알앤비",
     title: "헤어지자 말해요",
     artist: "박재정",
-    youtubeUrl: "https://www.youtube.com/results?search_query=박재정+헤어지자+말해요",
+    youtubeUrl: youtubeSearch("박재정", "헤어지자 말해요"),
   },
   {
     id: 14,
@@ -118,7 +121,7 @@ export const SONGS: Song[] = [
     genre: "K-POP",
     title: "Next Level",
     artist: "aespa",
-    youtubeUrl: "https://www.youtube.com/results?search_query=aespa+next+level",
+    youtubeUrl: youtubeSearch("aespa", "Next Level"),
   },
   {
     id: 15,
@@ -126,7 +129,7 @@ export const SONGS: Song[] = [
     genre: "국내 힙합",
     title: "Gemini",
     artist: "릴러말즈",
-    youtubeUrl: "https://www.youtube.com/results?search_query=릴러말즈+gemini",
+    youtubeUrl: youtubeSearch("릴러말즈", "Gemini"),
   },
   {
     id: 16,
@@ -134,7 +137,7 @@ export const SONGS: Song[] = [
     genre: "K-POP",
     title: "After LIKE",
     artist: "IVE",
-    youtubeUrl: "https://www.youtube.com/results?search_query=ive+after+like",
+    youtubeUrl: youtubeSearch("IVE", "After LIKE"),
   },
   {
     id: 17,
@@ -142,7 +145,7 @@ export const SONGS: Song[] = [
     genre: "국내 발라드",
     title: "사건의 지평선",
     artist: "윤하",
-    youtubeUrl: "https://www.youtube.com/results?search_query=윤하+사건의+지평선",
+    youtubeUrl: youtubeSearch("윤하", "사건의 지평선"),
   },
   {
     id: 18,
@@ -150,7 +153,7 @@ export const SONGS: Song[] = [
     genre: "K-POP",
     title: "Super Shy",
     artist: "NewJeans",
-    youtubeUrl: "https://www.youtube.com/results?search_query=newjeans+super+shy",
+    youtubeUrl: youtubeSearch("NewJeans", "Super Shy"),
   },
   {
     id: 19,
@@ -158,7 +161,7 @@ export const SONGS: Song[] = [
     genre: "국내 알앤비",
     title: "라일락",
     artist: "아이유",
-    youtubeUrl: "https://www.youtube.com/results?search_query=아이유+라일락",
+    youtubeUrl: youtubeSearch("아이유", "라일락"),
   },
   {
     id: 20,
@@ -166,7 +169,7 @@ export const SONGS: Song[] = [
     genre: "K-POP",
     title: "Magnetic",
     artist: "ILLIT",
-    youtubeUrl: "https://www.youtube.com/results?search_query=illit+magnetic",
+    youtubeUrl: youtubeSearch("ILLIT", "Magnetic"),
   },
   {
     id: 21,
@@ -174,7 +177,7 @@ export const SONGS: Song[] = [
     genre: "국내 힙합",
     title: "Home Sweet Home",
     artist: "G-DRAGON",
-    youtubeUrl: "https://www.youtube.com/results?search_query=gdragon+home+sweet+home",
+    youtubeUrl: youtubeSearch("G-DRAGON", "Home Sweet Home"),
   },
   {
     id: 22,
@@ -182,7 +185,7 @@ export const SONGS: Song[] = [
     genre: "국내 발라드",
     title: "소나기",
     artist: "이클립스",
-    youtubeUrl: "https://www.youtube.com/results?search_query=이클립스+소나기",
+    youtubeUrl: youtubeSearch("이클립스", "소나기"),
   },
   {
     id: 23,
@@ -190,7 +193,7 @@ export const SONGS: Song[] = [
     genre: "K-POP",
     title: "Whiplash",
     artist: "aespa",
-    youtubeUrl: "https://www.youtube.com/results?search_query=aespa+whiplash",
+    youtubeUrl: youtubeSearch("aespa", "Whiplash"),
   },
   {
     id: 24,
@@ -198,7 +201,7 @@ export const SONGS: Song[] = [
     genre: "국내 알앤비",
     title: "Drowning",
     artist: "WOODZ",
-    youtubeUrl: "https://www.youtube.com/results?search_query=woodz+drowning",
+    youtubeUrl: youtubeSearch("WOODZ", "Drowning"),
   },
   {
     id: 25,
@@ -206,6 +209,6 @@ export const SONGS: Song[] = [
     genre: "K-POP",
     title: "신곡 (예시)",
     artist: "신인 그룹",
-    youtubeUrl: "https://www.youtube.com/results?search_query=kpop+2026",
+    youtubeUrl: youtubeSearch("2026", "K-POP", "신곡"),
   },
 ];

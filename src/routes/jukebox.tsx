@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/jukebox")({
-  head: () => ({ meta: [{ title: "게임1. 노래 맞추기 주크박스 — LIKELION MT" }] }),
+  head: () => ({ meta: [{ title: "게임1. 노래 맞히기 주크박스 - LIKELION MT" }] }),
   component: Jukebox,
 });
 
@@ -33,8 +33,8 @@ function Jukebox() {
   const step = !team ? 0 : !current ? 1 : !revealed ? 2 : 3;
 
   const draw = () => {
-    if (!team) return toast.error("먼저 차례 팀을 선택하세요");
-    if (!remaining.length) return toast.error("남은 노래가 없습니다. 사용 목록을 초기화하세요.");
+    if (!team) return toast.error("먼저 참여 팀을 선택하세요.");
+    if (!remaining.length) return toast.error("남은 노래가 없습니다. 사용 목록을 초기화해 주세요.");
     const pick = remaining[Math.floor(Math.random() * remaining.length)];
     setCurrent(pick);
     setRevealed(false);
@@ -49,6 +49,7 @@ function Jukebox() {
     setCurrent(null);
     setRevealed(false);
   };
+
   const fail = () => {
     if (!team || !current) return;
     toast(`${teams.find((t) => t.id === team)!.name} 실패`);
@@ -57,39 +58,45 @@ function Jukebox() {
     setRevealed(false);
   };
 
+  const openYoutube = () => {
+    if (!current) return;
+    window.open(current.youtubeUrl, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <div className="space-y-8">
       <GameHeader
-        title="게임1. 노래 맞추기 주크박스"
-        subtitle="년도와 장르 힌트만 보고 노래를 맞추세요!"
+        title="게임1. 노래 맞히기 주크박스"
+        subtitle="연도와 장르 힌트를 보고 노래 제목을 맞히세요."
         badge={
           <span className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-bold">
-            🎵 게임 1
+            🎧 게임 1
           </span>
         }
         steps={["팀 선택", "노래 뽑기", "정답 공개", "결과 입력"]}
         currentStep={step}
         rules={
           <ul className="list-disc pl-5 space-y-1">
-            <li>팀별로 한 명씩 나와서 진행. 총 4팀.</li>
-            <li>년도/장르 힌트로 노래를 맞춥니다.</li>
-            <li>맞춘 개수 → 순위, 동점 시 빠른 팀 우선.</li>
+            <li>팀별로 순서대로 진행합니다.</li>
+            <li>연도와 장르 힌트만 보고 노래 제목을 맞힙니다.</li>
+            <li>유튜브 버튼은 현재 뽑힌 노래의 정확한 검색 결과를 새 탭으로 엽니다.</li>
+            <li>맞힌 개수와 순위 점수를 함께 반영해 최종 점수를 계산합니다.</li>
           </ul>
         }
       />
 
-      <TeamPicker value={team} onChange={setTeam} label="① 현재 차례 팀" />
+      <TeamPicker value={team} onChange={setTeam} label="현재 참여 팀" />
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 rounded-3xl bg-card border-2 border-border p-8 space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="text-sm uppercase tracking-widest text-muted-foreground font-bold">
               라운드 {round} · 남은 곡 {remaining.length}/{SONGS.length}
             </div>
             <button
               onClick={() => {
                 void resetUsed("song");
-                toast.success("사용된 곡 목록 초기화");
+                toast.success("사용한 곡 목록을 초기화했습니다.");
               }}
               className="text-xs text-muted-foreground underline"
             >
@@ -103,7 +110,7 @@ function Jukebox() {
             onClick={draw}
             disabled={!team || !!current}
           >
-            ② 🎰 랜덤 뽑기
+            🎰 랜덤 노래 뽑기
           </BigButton>
 
           <AnimatePresence mode="wait">
@@ -119,7 +126,7 @@ function Jukebox() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="rounded-xl bg-card p-5 text-center border border-border">
                     <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold">
-                      년도
+                      연도
                     </div>
                     <SlotReveal
                       pool={SONGS.map((s) => String(s.year))}
@@ -140,17 +147,14 @@ function Jukebox() {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <BigButton
-                    variant="accent"
-                    onClick={() => window.open(current.youtubeUrl, "_blank")}
-                  >
-                    ▶ 유튜브 열기
+                  <BigButton variant="accent" onClick={openYoutube}>
+                    유튜브에서 확인
                   </BigButton>
                   <BigButton
                     variant={revealed ? "ghost" : "outline"}
                     onClick={() => setRevealed((r) => !r)}
                   >
-                    {revealed ? "🙈 정답 숨기기" : "③ 👀 정답 공개"}
+                    {revealed ? "정답 숨기기" : "정답 공개"}
                   </BigButton>
                 </div>
 
@@ -173,10 +177,10 @@ function Jukebox() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <BigButton variant="success" size="lg" onClick={correct}>
-                    ✅ 맞춤 +1
+                    맞힘 +1
                   </BigButton>
                   <BigButton variant="danger" size="lg" onClick={fail}>
-                    ❌ 실패
+                    실패
                   </BigButton>
                 </div>
               </motion.div>
@@ -185,7 +189,7 @@ function Jukebox() {
         </div>
 
         <div className="rounded-3xl bg-card border-2 border-border p-6">
-          <h3 className="font-display text-2xl mb-4">📋 팀별 정답 개수</h3>
+          <h3 className="font-display text-2xl mb-4">팀별 정답 개수</h3>
           <div className="space-y-2">
             {teams.map((t) => (
               <div
