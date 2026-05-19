@@ -223,4 +223,10 @@
   .animate-float {
     animation: float 4s ease-in-out infinite;
   }
+
+  .text-entry:empty::before {
+    content: attr(data-placeholder);
+    color: var(--muted-foreground);
+    pointer-events: none;
+  }
 }

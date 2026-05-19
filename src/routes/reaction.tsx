@@ -4,6 +4,7 @@ import { GameHeader } from "@/components/GameHeader";
 import { BigButton } from "@/components/BigButton";
 import { ResultsPanel } from "@/components/ResultsPanel";
 import { TeamPicker } from "@/components/TeamPicker";
+import { TextEntry } from "@/components/TextEntry";
 import { Timer } from "@/components/Timer";
 import { useGameStore } from "@/store/useGameStore";
 import { REACTIONS, type ReactionAction } from "@/data/reactions";
@@ -98,11 +99,11 @@ function Reaction() {
           <div className="text-sm font-bold text-muted-foreground mb-2 uppercase tracking-wider">
             추측자 이름
           </div>
-          <input
+          <TextEntry
             value={guesser}
-            onChange={(e) => setGuesser(e.target.value)}
+            onChange={setGuesser}
             placeholder="예) 천병권"
-            className="w-full h-14 rounded-xl bg-input border border-border px-4 text-lg"
+            className="min-h-14 rounded-xl px-4 py-3 text-lg"
           />
         </div>
       </div>

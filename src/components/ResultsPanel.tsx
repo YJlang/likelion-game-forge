@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { type TeamId } from "@/data/teams";
 import { BigButton } from "./BigButton";
 import { ConfirmModal } from "./ConfirmModal";
+import { TextEntry } from "./TextEntry";
 import {
   useGameStore,
   REGULAR_POINTS,
@@ -227,11 +228,11 @@ export function ResultsPanel({ game, singing = false }: Props) {
           <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-2">
             MVP 플레이어 이름 (선택)
           </div>
-          <input
+          <TextEntry
             value={mvpPlayer}
-            onChange={(e) => setMvpPlayer(e.target.value)}
+            onChange={setMvpPlayer}
             placeholder="예) 김소은"
-            className="w-full h-12 rounded-lg bg-input border border-border px-3 text-foreground"
+            className="h-12"
           />
         </div>
       </div>
