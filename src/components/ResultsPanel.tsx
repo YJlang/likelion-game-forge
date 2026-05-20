@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { type TeamId } from "@/data/teams";
 import { BigButton } from "./BigButton";
-import { ConfirmModal } from "./ConfirmModal";
 import { TextEntry } from "./TextEntry";
 import {
   useGameStore,
@@ -39,7 +38,7 @@ export function ResultsPanel({ game, singing = false }: Props) {
     team4: false,
   });
   const [crowd, setCrowd] = useState<TeamId | "">("");
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [applying, setApplying] = useState(false);
   const absentTeamIds = useMemo(
     () => (Object.keys(absent) as TeamId[]).filter((tid) => absent[tid]),
     [absent],
@@ -96,6 +95,8 @@ export function ResultsPanel({ game, singing = false }: Props) {
       : "⚠️ 1~4등 모두 다른 팀으로 선택하세요";
 
   const handleApply = async () => {
+    if (!valid || applying) return;
+    setApplying(true);
     const entries: { team: TeamId; delta: number; reason: string; entryType?: ScoreEntryType }[] =
       [];
     (Object.keys(preview) as TeamId[]).forEach((tid) => {
@@ -128,14 +129,15 @@ export function ResultsPanel({ game, singing = false }: Props) {
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "점수 반영 실패");
+      setApplying(false);
       return;
     }
-    setConfirmOpen(false);
     setRanks(["", "", "", ""]);
     setMvp("");
     setMvpPlayer("");
     setCrowd("");
     setAbsent({ team1: false, team2: false, team3: false, team4: false });
+    setApplying(false);
   };
 
   return (
@@ -306,48 +308,13 @@ export function ResultsPanel({ game, singing = false }: Props) {
 
       <BigButton
         size="xl"
-        disabled={!valid}
-        onClick={() => setConfirmOpen(true)}
+        disabled={!valid || applying}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => void handleApply()}
         className="w-full"
       >
-        ✅ 점수 반영하기
+        {applying ? "반영 중..." : "✅ 점수 반영하기"}
       </BigButton>
-
-      <ConfirmModal
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
-        title="점수를 반영할까요?"
-        description={
-          <div className="space-y-3">
-            <div className="text-muted-foreground">
-              반영 후 점수판에 즉시 반영되며, 새로고침해도 유지됩니다.
-            </div>
-            <div className="rounded-xl border border-border bg-background/50 p-3 space-y-1">
-              {(Object.keys(preview) as TeamId[])
-                .filter((tid) => preview[tid].delta !== 0)
-                .map((tid) => {
-                  const t = teams.find((team) => team.id === tid)!;
-                  const p = preview[tid];
-                  return (
-                    <div key={tid} className="flex items-center justify-between text-base">
-                      <span className="font-bold">
-                        {t.emoji} {t.name}
-                      </span>
-                      <span
-                        className={`font-display text-2xl tabular-nums ${p.delta > 0 ? "text-success" : "text-destructive"}`}
-                      >
-                        {p.delta > 0 ? "+" : ""}
-                        {p.delta}
-                      </span>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-        }
-        confirmLabel="네, 반영"
-        onConfirm={() => void handleApply()}
-      />
     </div>
   );
 }

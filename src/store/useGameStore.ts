@@ -226,7 +226,31 @@ export const useGameStore = create<State & Actions>()(
             entries,
             mvp && game !== "manual" ? { game, team: mvp.team, player: mvp.player } : undefined,
           );
-          await refreshAfterRemoteWrite(set);
+          set((s) => {
+            const next = applyLocalScores(s, game, remoteBatchId, entries);
+            return mvp && game !== "manual"
+              ? {
+                  ...next,
+                  mvpLog: [
+                    ...s.mvpLog,
+                    {
+                      id: uid(),
+                      scoreBatchId: remoteBatchId,
+                      game,
+                      team: mvp.team,
+                      player: mvp.player,
+                      at: Date.now(),
+                    },
+                  ],
+                  syncStatus: "synced",
+                  syncError: undefined,
+                }
+              : { ...next, syncStatus: "synced", syncError: undefined };
+          });
+          void refreshAfterRemoteWrite(set).catch((error) => {
+            const message = error instanceof Error ? error.message : "Supabase 동기화 실패";
+            set({ syncStatus: "error", syncError: message });
+          });
           return remoteBatchId;
         }
 
