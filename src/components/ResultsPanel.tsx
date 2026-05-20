@@ -40,6 +40,11 @@ export function ResultsPanel({ game, singing = false }: Props) {
   });
   const [crowd, setCrowd] = useState<TeamId | "">("");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const absentTeamIds = useMemo(
+    () => (Object.keys(absent) as TeamId[]).filter((tid) => absent[tid]),
+    [absent],
+  );
+  const rankCount = singing ? teams.length - absentTeamIds.length : teams.length;
 
   const preview = useMemo(() => {
     const map: Record<TeamId, { delta: number; reasons: string[] }> = {
@@ -73,7 +78,22 @@ export function ResultsPanel({ game, singing = false }: Props) {
     return map;
   }, [ranks, mvp, absent, crowd, singing, points]);
 
-  const valid = ranks.every((r) => r) && new Set(ranks).size === 4;
+  const requiredRanks = ranks.slice(0, rankCount);
+  const unusedRanks = ranks.slice(rankCount);
+  const uniqueRequiredRanks = new Set(requiredRanks);
+  const hasAbsentRank = requiredRanks.some((tid) => tid && singing && absent[tid]);
+  const valid = singing
+    ? requiredRanks.every((r) => r) &&
+      uniqueRequiredRanks.size === requiredRanks.length &&
+      unusedRanks.every((r) => !r) &&
+      !hasAbsentRank &&
+      (rankCount > 0 || absentTeamIds.length > 0)
+    : ranks.every((r) => r) && new Set(ranks).size === teams.length;
+  const statusText = valid
+    ? "✅ 입력 완료"
+    : singing
+      ? `⚠️ 참여 팀 ${rankCount}팀을 1등부터 순서대로 선택하세요`
+      : "⚠️ 1~4등 모두 다른 팀으로 선택하세요";
 
   const handleApply = async () => {
     const entries: { team: TeamId; delta: number; reason: string; entryType?: ScoreEntryType }[] =
@@ -145,17 +165,20 @@ export function ResultsPanel({ game, singing = false }: Props) {
             <select
               className="mt-1 w-full h-12 rounded-lg bg-input border border-border px-3 text-foreground"
               value={ranks[i]}
+              disabled={singing && i >= rankCount}
               onChange={(e) => {
                 const v = e.target.value as TeamId | "";
                 setRanks((r) => r.map((x, idx) => (idx === i ? v : x)));
               }}
             >
-              <option value="">선택</option>
-              {teams.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.emoji} {t.name} {t.leader}
-                </option>
-              ))}
+              <option value="">{singing && i >= rankCount ? "불참 팀 제외" : "선택"}</option>
+              {teams
+                .filter((t) => !singing || !absent[t.id])
+                .map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.emoji} {t.name} {t.leader}
+                  </option>
+                ))}
             </select>
           </div>
         ))}
@@ -172,7 +195,15 @@ export function ResultsPanel({ game, singing = false }: Props) {
               {teams.map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => setAbsent((a) => ({ ...a, [t.id]: !a[t.id] }))}
+                  onClick={() => {
+                    const nextAbsent = !absent[t.id];
+                    setAbsent((a) => ({ ...a, [t.id]: nextAbsent }));
+                    if (nextAbsent) {
+                      setRanks((current) => current.map((tid) => (tid === t.id ? "" : tid)));
+                      setCrowd((current) => (current === t.id ? "" : current));
+                      setMvp((current) => (current === t.id ? "" : current));
+                    }
+                  }}
                   className={`px-3 py-2 rounded-lg border-2 text-sm font-semibold transition-all ${
                     absent[t.id]
                       ? "border-destructive bg-destructive/10 text-destructive"
@@ -195,11 +226,13 @@ export function ResultsPanel({ game, singing = false }: Props) {
               onChange={(e) => setCrowd(e.target.value as TeamId | "")}
             >
               <option value="">선택 안 함</option>
-              {teams.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.emoji} {t.name}
-                </option>
-              ))}
+              {teams
+                .filter((t) => !absent[t.id])
+                .map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.emoji} {t.name}
+                  </option>
+                ))}
             </select>
           </div>
         </div>
@@ -217,11 +250,13 @@ export function ResultsPanel({ game, singing = false }: Props) {
             onChange={(e) => setMvp(e.target.value as TeamId | "")}
           >
             <option value="">선택 안 함</option>
-            {teams.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.emoji} {t.name}
-              </option>
-            ))}
+            {teams
+              .filter((t) => !singing || !absent[t.id])
+              .map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.emoji} {t.name}
+                </option>
+              ))}
           </select>
         </div>
         <div>
@@ -243,9 +278,7 @@ export function ResultsPanel({ game, singing = false }: Props) {
           <div className="text-sm uppercase tracking-widest text-accent font-bold">
             📊 점수 미리보기
           </div>
-          <div className="text-xs text-muted-foreground">
-            {valid ? "✅ 입력 완료" : "⚠️ 1~4등 모두 다른 팀으로 선택하세요"}
-          </div>
+          <div className="text-xs text-muted-foreground">{statusText}</div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {(Object.keys(preview) as TeamId[]).map((tid) => {
