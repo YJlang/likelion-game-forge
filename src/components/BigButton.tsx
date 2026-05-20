@@ -32,8 +32,16 @@ export interface BigButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof variants> {}
 
 export const BigButton = forwardRef<HTMLButtonElement, BigButtonProps>(
-  ({ className, variant, size, ...props }, ref) => (
-    <button ref={ref} className={cn(variants({ variant, size }), className)} {...props} />
+  ({ className, variant, size, onMouseDown, ...props }, ref) => (
+    <button
+      ref={ref}
+      className={cn(variants({ variant, size }), className)}
+      onMouseDown={(event) => {
+        event.preventDefault();
+        onMouseDown?.(event);
+      }}
+      {...props}
+    />
   ),
 );
 BigButton.displayName = "BigButton";

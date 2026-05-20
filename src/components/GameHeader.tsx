@@ -28,6 +28,7 @@ export function GameHeader({ title, subtitle, rules, badge, steps, currentStep =
         </div>
         {rules && (
           <button
+            onMouseDown={(event) => event.preventDefault()}
             onClick={() => setOpen((v) => !v)}
             className="flex items-center gap-2 px-5 py-3 rounded-xl border-2 border-border bg-card hover:bg-muted text-base font-bold"
           >

@@ -181,6 +181,26 @@ function applyLocalScores(
   };
 }
 
+function undoLocalScoreBatch(state: State, batchId: string): Partial<State> | null {
+  const entries = state.scoreLog.filter((entry) => entry.batchId === batchId);
+  if (!entries.length) return null;
+  const entryIds = new Set(entries.map((entry) => entry.id));
+  const scores = { ...state.scores };
+
+  for (const entry of entries) {
+    scores[entry.team] = (scores[entry.team] ?? 0) - entry.delta;
+  }
+
+  const scoreLog = state.scoreLog.filter((entry) => !entryIds.has(entry.id));
+  return {
+    scores,
+    scoreLog,
+    correctCounts: calculateCorrectCounts(scoreLog),
+    mvpLog: state.mvpLog.filter((entry) => entry.scoreBatchId !== batchId),
+    lastSavedAt: Date.now(),
+  };
+}
+
 async function refreshAfterRemoteWrite(set: (partial: Partial<State>) => void) {
   const remote = await loadRemoteGameState();
   set({ ...remote, correctCounts: calculateCorrectCounts(remote.scoreLog), syncStatus: "synced" });
@@ -294,7 +314,11 @@ export const useGameStore = create<State & Actions>()(
             id,
             team,
           );
-          await refreshAfterRemoteWrite(set);
+          set((s) => ({ [key]: [...s[key], id], lastSavedAt: Date.now() }) as Partial<State>);
+          void refreshAfterRemoteWrite(set).catch((error) => {
+            const message = error instanceof Error ? error.message : "Supabase 동기화 실패";
+            set({ syncStatus: "error", syncError: message });
+          });
           return;
         }
 
@@ -306,7 +330,11 @@ export const useGameStore = create<State & Actions>()(
 
         if (isSupabaseConfigured && state.eventId) {
           await resetRemoteUsedItems(state.eventId, kind);
-          await refreshAfterRemoteWrite(set);
+          set({ [key]: [], lastSavedAt: Date.now() } as Partial<State>);
+          void refreshAfterRemoteWrite(set).catch((error) => {
+            const message = error instanceof Error ? error.message : "Supabase 동기화 실패";
+            set({ syncStatus: "error", syncError: message });
+          });
           return;
         }
 
@@ -317,7 +345,19 @@ export const useGameStore = create<State & Actions>()(
 
         if (isSupabaseConfigured && state.eventId) {
           await resetRemoteEvent(state.eventId);
-          await refreshAfterRemoteWrite(set);
+          set({
+            ...initial,
+            eventId: state.eventId,
+            teams: state.teams,
+            teamDbIds: state.teamDbIds,
+            lastSavedAt: Date.now(),
+            syncStatus: "synced",
+            syncError: undefined,
+          });
+          void refreshAfterRemoteWrite(set).catch((error) => {
+            const message = error instanceof Error ? error.message : "Supabase 동기화 실패";
+            set({ syncStatus: "error", syncError: message });
+          });
           return;
         }
 
@@ -336,28 +376,18 @@ export const useGameStore = create<State & Actions>()(
 
         if (isSupabaseConfigured && state.eventId) {
           await undoRemoteBatch(last.batchId);
-          await refreshAfterRemoteWrite(set);
+          const localUndo = undoLocalScoreBatch(get(), last.batchId);
+          if (localUndo) set({ ...localUndo, syncStatus: "synced", syncError: undefined });
+          void refreshAfterRemoteWrite(set).catch((error) => {
+            const message = error instanceof Error ? error.message : "Supabase 동기화 실패";
+            set({ syncStatus: "error", syncError: message });
+          });
           return true;
         }
 
-        const entries = state.scoreLog.filter((entry) => entry.batchId === last.batchId);
-        if (!entries.length) return false;
-        const entryIds = new Set(entries.map((entry) => entry.id));
-
-        set((s) => {
-          const scores = { ...s.scores };
-          for (const entry of entries) {
-            scores[entry.team] = (scores[entry.team] ?? 0) - entry.delta;
-          }
-          const scoreLog = s.scoreLog.filter((entry) => !entryIds.has(entry.id));
-          return {
-            scores,
-            scoreLog,
-            correctCounts: calculateCorrectCounts(scoreLog),
-            mvpLog: s.mvpLog.filter((entry) => entry.scoreBatchId !== last.batchId),
-            lastSavedAt: Date.now(),
-          };
-        });
+        const localUndo = undoLocalScoreBatch(state, last.batchId);
+        if (!localUndo) return false;
+        set(localUndo);
         return true;
       },
     }),

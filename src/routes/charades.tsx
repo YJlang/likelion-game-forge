@@ -85,6 +85,7 @@ function Charades() {
               남은 키워드 {remaining.length}/{CHARADES.length}
             </div>
             <button
+              onMouseDown={(event) => event.preventDefault()}
               onClick={() => {
                 void resetUsed("charade");
                 toast.success("사용 키워드 초기화");

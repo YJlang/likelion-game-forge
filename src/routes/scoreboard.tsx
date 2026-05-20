@@ -2,9 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { type TeamId } from "@/data/teams";
 import { useGameStore, GAME_LABEL } from "@/store/useGameStore";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BigButton } from "@/components/BigButton";
-import { ConfirmModal } from "@/components/ConfirmModal";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/scoreboard")({
@@ -25,23 +24,59 @@ function Scoreboard() {
   const manualAdjust = useGameStore((s) => s.manualAdjust);
   const undoLastScoreBatch = useGameStore((s) => s.undoLastScoreBatch);
   const resetAll = useGameStore((s) => s.resetAll);
-  const [undoOpen, setUndoOpen] = useState(false);
-  const [resetOpen, setResetOpen] = useState(false);
+  const [confirming, setConfirming] = useState<"undo" | "reset" | null>(null);
+  const [busyAction, setBusyAction] = useState<"undo" | "reset" | null>(null);
   const [expanded, setExpanded] = useState<TeamId | null>(null);
+  const [savedTime, setSavedTime] = useState("동기화 중");
 
   const sorted = [...teams].sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0));
-  const savedTime = new Date(lastSavedAt).toLocaleTimeString("ko-KR");
   const lastEntry = log.at(-1);
-  const lastBatchEntries = lastEntry
-    ? lastEntry.batchId
-      ? log.filter((entry) => entry.batchId === lastEntry.batchId)
-      : log.filter((entry) => entry.at === lastEntry.at)
-    : [];
-  const lastBatchLabel = lastEntry
-    ? lastEntry.game === "manual"
-      ? "수동 조정"
-      : GAME_LABEL[lastEntry.game]
-    : "";
+
+  useEffect(() => {
+    setSavedTime(new Date(lastSavedAt).toLocaleTimeString("ko-KR"));
+  }, [lastSavedAt]);
+
+  useEffect(() => {
+    if (!confirming) return;
+    const timeout = window.setTimeout(() => setConfirming(null), 5000);
+    return () => window.clearTimeout(timeout);
+  }, [confirming]);
+
+  const handleUndo = async () => {
+    if (confirming !== "undo") {
+      setConfirming("undo");
+      return;
+    }
+    setBusyAction("undo");
+    try {
+      const ok = await undoLastScoreBatch();
+      toast[ok ? "success" : "error"](
+        ok ? "최근 점수 반영을 취소했습니다." : "취소할 점수 내역이 없습니다.",
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "최근 반영 취소 실패");
+    } finally {
+      setBusyAction(null);
+      setConfirming(null);
+    }
+  };
+
+  const handleReset = async () => {
+    if (confirming !== "reset") {
+      setConfirming("reset");
+      return;
+    }
+    setBusyAction("reset");
+    try {
+      await resetAll();
+      toast.success("초기화 완료");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "전체 초기화 실패");
+    } finally {
+      setBusyAction(null);
+      setConfirming(null);
+    }
+  };
 
   return (
     <div className="space-y-10">
@@ -51,11 +86,27 @@ function Scoreboard() {
           <p className="text-muted-foreground mt-2">자동 저장됨 · {savedTime}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <BigButton variant="ghost" disabled={!lastEntry} onClick={() => setUndoOpen(true)}>
-            ↩ 최근 반영 취소
+          <BigButton
+            variant="ghost"
+            disabled={!lastEntry || Boolean(busyAction)}
+            onClick={() => void handleUndo()}
+          >
+            {busyAction === "undo"
+              ? "취소 중..."
+              : confirming === "undo"
+                ? "다시 누르면 최근 반영 취소"
+                : "↩ 최근 반영 취소"}
           </BigButton>
-          <BigButton variant="danger" onClick={() => setResetOpen(true)}>
-            ⚠️ 전체 초기화
+          <BigButton
+            variant="danger"
+            disabled={Boolean(busyAction)}
+            onClick={() => void handleReset()}
+          >
+            {busyAction === "reset"
+              ? "초기화 중..."
+              : confirming === "reset"
+                ? "다시 누르면 전체 초기화"
+                : "⚠️ 전체 초기화"}
           </BigButton>
         </div>
       </div>
@@ -109,18 +160,21 @@ function Scoreboard() {
 
               <div className="mt-4 flex flex-wrap gap-2">
                 <button
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={() => void manualAdjust(t.id, +1, "수동 +1")}
                   className="px-3 py-1.5 rounded-lg bg-success/20 text-success text-sm font-bold border border-success/40"
                 >
                   +1
                 </button>
                 <button
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={() => void manualAdjust(t.id, -1, "수동 -1")}
                   className="px-3 py-1.5 rounded-lg bg-destructive/20 text-destructive text-sm font-bold border border-destructive/40"
                 >
                   -1
                 </button>
                 <button
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={() => setExpanded((p) => (p === t.id ? null : t.id))}
                   className="ml-auto px-3 py-1.5 rounded-lg bg-card border border-border text-sm font-semibold"
                 >
@@ -166,60 +220,13 @@ function Scoreboard() {
         })}
       </div>
 
-      <ConfirmModal
-        open={undoOpen}
-        onOpenChange={setUndoOpen}
-        title="최근 점수 반영을 취소할까요?"
-        description={
-          <div className="space-y-3">
-            <div className="text-muted-foreground">
-              {lastBatchLabel || "최근 반영"} 항목을 되돌립니다. 연결된 MVP 기록도 함께 제거됩니다.
-            </div>
-            <div className="rounded-xl border border-border bg-background/50 p-3 space-y-1">
-              {lastBatchEntries.map((entry) => {
-                const t = teams.find((team) => team.id === entry.team)!;
-                return (
-                  <div key={entry.id} className="flex items-center justify-between text-base">
-                    <span className="font-bold">
-                      {t.emoji} {t.name}
-                    </span>
-                    <span
-                      className={`font-display text-2xl tabular-nums ${
-                        entry.delta > 0 ? "text-destructive" : "text-success"
-                      }`}
-                    >
-                      {entry.delta > 0 ? "-" : "+"}
-                      {Math.abs(entry.delta)}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        }
-        confirmLabel="네, 취소"
-        onConfirm={() => {
-          void undoLastScoreBatch().then((ok) => {
-            toast[ok ? "success" : "error"](
-              ok ? "최근 점수 반영을 취소했습니다." : "취소할 점수 내역이 없습니다.",
-            );
-          });
-          setUndoOpen(false);
-        }}
-      />
-
-      <ConfirmModal
-        open={resetOpen}
-        onOpenChange={setResetOpen}
-        variant="danger"
-        title="모든 점수를 초기화할까요?"
-        description="모든 팀 점수, 게임 기록, 사용된 항목, MVP 기록이 영구 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
-        confirmLabel="네, 전부 초기화"
-        onConfirm={() => {
-          void resetAll().then(() => toast.success("초기화 완료"));
-          setResetOpen(false);
-        }}
-      />
+      {confirming && (
+        <div className="rounded-2xl border border-accent/50 bg-accent/10 px-5 py-4 text-sm font-semibold text-accent">
+          {confirming === "reset"
+            ? "전체 초기화는 되돌릴 수 없습니다. 5초 안에 초기화 버튼을 한 번 더 누르면 실행됩니다."
+            : "최근 반영과 연결된 MVP 기록을 되돌립니다. 5초 안에 취소 버튼을 한 번 더 누르면 실행됩니다."}
+        </div>
+      )}
     </div>
   );
 }

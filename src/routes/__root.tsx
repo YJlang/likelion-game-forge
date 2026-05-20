@@ -40,6 +40,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <h1 className="font-display text-4xl">앗! 문제가 발생했어요</h1>
         <p className="mt-2 text-muted-foreground">{error.message}</p>
         <button
+          onMouseDown={(event) => event.preventDefault()}
           onClick={() => {
             router.invalidate();
             reset();

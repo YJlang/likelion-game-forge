@@ -78,6 +78,7 @@ function TruthLie() {
             문제 {qNum} · 남은 {remaining.length}/{TRUTH_LIES.length}
           </div>
           <button
+            onMouseDown={(event) => event.preventDefault()}
             onClick={() => {
               void resetUsed("truth");
               toast.success("문제 풀 초기화");
@@ -143,6 +144,7 @@ function TruthLie() {
             {teams.map((t) => (
               <button
                 key={t.id}
+                onMouseDown={(event) => event.preventDefault()}
                 onClick={() => setCorrect((c) => ({ ...c, [t.id]: !c[t.id] }))}
                 className={`p-4 rounded-xl border-2 transition-all text-left ${
                   correct[t.id] ? "border-success bg-success/10" : "border-border bg-card"

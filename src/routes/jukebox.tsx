@@ -94,6 +94,7 @@ function Jukebox() {
               라운드 {round} · 남은 곡 {remaining.length}/{SONGS.length}
             </div>
             <button
+              onMouseDown={(event) => event.preventDefault()}
               onClick={() => {
                 void resetUsed("song");
                 toast.success("사용한 곡 목록을 초기화했습니다.");

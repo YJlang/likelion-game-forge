@@ -122,6 +122,7 @@ function Reaction() {
               남은 행동 {remaining.length}/{REACTIONS.length}
             </div>
             <button
+              onMouseDown={(event) => event.preventDefault()}
               onClick={() => {
                 void resetUsed("reaction");
                 toast.success("행동 목록을 초기화했습니다.");

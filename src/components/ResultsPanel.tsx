@@ -197,6 +197,7 @@ export function ResultsPanel({ game, singing = false }: Props) {
               {teams.map((t) => (
                 <button
                   key={t.id}
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={() => {
                     const nextAbsent = !absent[t.id];
                     setAbsent((a) => ({ ...a, [t.id]: nextAbsent }));

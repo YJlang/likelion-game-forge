@@ -21,6 +21,7 @@ export function TeamPicker({ value, onChange, label = "참여 팀 선택" }: Pro
           return (
             <button
               key={t.id}
+              onMouseDown={(event) => event.preventDefault()}
               onClick={() => onChange(t.id)}
               className={cn(
                 "p-4 rounded-xl border-2 text-left transition-all",

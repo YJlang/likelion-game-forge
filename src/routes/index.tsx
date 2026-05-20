@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SCHEDULE } from "@/data/schedule";
 import { useGameStore } from "@/store/useGameStore";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -19,19 +20,23 @@ export const Route = createFileRoute("/")({
 function Home() {
   const scores = useGameStore((s) => s.scores);
   const teams = useGameStore((s) => s.teams);
+  const [currentIndex, setCurrentIndex] = useState(-1);
 
-  // current schedule item by time-of-day
-  const now = new Date();
-  const cur = SCHEDULE.find((s) => {
-    const [sh, sm] = s.start.split(":").map(Number);
-    const [eh, em] = s.end.split(":").map(Number);
-    const start = sh * 60 + sm;
-    const end = eh * 60 + em;
-    const t = now.getHours() * 60 + now.getMinutes();
-    return t >= start && t < end;
-  });
-  const curIdx = cur ? SCHEDULE.indexOf(cur) : -1;
-  const next = curIdx >= 0 ? SCHEDULE[curIdx + 1] : SCHEDULE[0];
+  useEffect(() => {
+    const now = new Date();
+    const idx = SCHEDULE.findIndex((s) => {
+      const [sh, sm] = s.start.split(":").map(Number);
+      const [eh, em] = s.end.split(":").map(Number);
+      const start = sh * 60 + sm;
+      const end = eh * 60 + em;
+      const t = now.getHours() * 60 + now.getMinutes();
+      return t >= start && t < end;
+    });
+    setCurrentIndex(idx);
+  }, []);
+
+  const cur = currentIndex >= 0 ? SCHEDULE[currentIndex] : undefined;
+  const next = currentIndex >= 0 ? SCHEDULE[currentIndex + 1] : SCHEDULE[0];
 
   return (
     <div className="space-y-16">
@@ -128,7 +133,7 @@ function Home() {
         <h2 className="font-display text-4xl mb-6">🗓 오늘의 진행 순서</h2>
         <div className="relative space-y-3">
           {SCHEDULE.map((s, i) => {
-            const isCur = i === curIdx;
+            const isCur = i === currentIndex;
             return (
               <div
                 key={s.id}
