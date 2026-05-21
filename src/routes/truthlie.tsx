@@ -4,7 +4,7 @@ import { GameHeader } from "@/components/GameHeader";
 import { BigButton } from "@/components/BigButton";
 import { ResultsPanel } from "@/components/ResultsPanel";
 import { useGameStore } from "@/store/useGameStore";
-import { TRUTH_LIES } from "@/data/truthlie";
+import { TRUTH_LIES, type TruthLiePair } from "@/data/truthlie";
 import { type TeamId } from "@/data/teams";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -13,6 +13,41 @@ export const Route = createFileRoute("/truthlie")({
   head: () => ({ meta: [{ title: "게임3. 운영진 진실/거짓 — LIKELION MT" }] }),
   component: TruthLie,
 });
+
+type TruthLieOption = {
+  label: "A" | "B";
+  statement: string;
+  answer: "진실" | "거짓";
+};
+
+type TruthLieRound = TruthLiePair & {
+  options: [TruthLieOption, TruthLieOption];
+};
+
+function createRound(question: TruthLiePair): TruthLieRound {
+  const trueOption: TruthLieOption = {
+    label: "A",
+    statement: question.trueStatement,
+    answer: "진실",
+  };
+  const falseOption: TruthLieOption = {
+    label: "B",
+    statement: question.falseStatement,
+    answer: "거짓",
+  };
+
+  if (Math.random() < 0.5) {
+    return { ...question, options: [trueOption, falseOption] };
+  }
+
+  return {
+    ...question,
+    options: [
+      { ...falseOption, label: "A" },
+      { ...trueOption, label: "B" },
+    ],
+  };
+}
 
 function TruthLie() {
   const used = useGameStore((s) => s.usedTruthIds);
@@ -31,13 +66,13 @@ function TruthLie() {
     team4: false,
   });
   const remaining = useMemo(() => TRUTH_LIES.filter((q) => !used.includes(q.id)), [used]);
-  const [current, setCurrent] = useState<(typeof TRUTH_LIES)[number] | null>(null);
+  const [current, setCurrent] = useState<TruthLieRound | null>(null);
 
   const draw = () => {
     const pool = TRUTH_LIES.filter((q) => !used.includes(q.id));
     if (!pool.length) return toast.error("남은 문제가 없습니다.");
     const pick = pool[Math.floor(Math.random() * pool.length)];
-    setCurrent(pick);
+    setCurrent(createRound(pick));
     setRevealed(false);
     void markUsed("truth", pick.id);
     setCorrect({ team1: false, team2: false, team3: false, team4: false });
@@ -55,7 +90,7 @@ function TruthLie() {
     <div className="space-y-8">
       <GameHeader
         title="게임3. 운영진 진실/거짓"
-        subtitle="문장이 진실인지 거짓인지 맞춰보세요!"
+        subtitle="두 문장 중 무엇이 진실이고 거짓인지 맞춰보세요!"
         badge={
           <span className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-bold">
             🤔 게임 3
@@ -65,8 +100,9 @@ function TruthLie() {
         currentStep={!current ? 0 : !revealed ? 1 : 2}
         rules={
           <ul className="list-disc pl-5 space-y-1">
-            <li>운영진에 대한 문장이 나옵니다.</li>
-            <li>각 팀은 진실/거짓을 선택, 진행자가 정답 공개.</li>
+            <li>운영진 한 명에 대한 문장 2개가 동시에 나옵니다.</li>
+            <li>각 팀은 A/B 중 어느 문장이 진실이고 거짓인지 맞힙니다.</li>
+            <li>홍민경, 권오현, 김민규 문항은 제외했습니다.</li>
             <li>맞춘 누적 개수 → 순위.</li>
           </ul>
         }
@@ -104,11 +140,40 @@ function TruthLie() {
               className="rounded-2xl border-2 border-primary glow-primary bg-background/50 p-8 text-center"
             >
               <div className="font-display text-4xl text-primary">{current.person}</div>
-              <div
-                className="font-display text-5xl md:text-7xl mt-4 leading-tight"
-                style={{ textShadow: "0 0 30px rgba(249,115,22,0.4)" }}
-              >
-                "{current.statement}"
+              <div className="grid md:grid-cols-2 gap-4 mt-5">
+                {current.options.map((option) => (
+                  <div
+                    key={option.label}
+                    className={`rounded-2xl border-2 p-5 text-left transition-all ${
+                      revealed
+                        ? option.answer === "진실"
+                          ? "border-success bg-success/10"
+                          : "border-destructive bg-destructive/10"
+                        : "border-border bg-card"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="font-display text-5xl text-accent">{option.label}</div>
+                      {revealed && (
+                        <div
+                          className={`rounded-full px-4 py-1.5 text-sm font-bold ${
+                            option.answer === "진실"
+                              ? "bg-success text-success-foreground"
+                              : "bg-destructive text-destructive-foreground"
+                          }`}
+                        >
+                          {option.answer}
+                        </div>
+                      )}
+                    </div>
+                    <div
+                      className="font-display text-3xl md:text-5xl mt-4 leading-tight"
+                      style={{ textShadow: "0 0 30px rgba(249,115,22,0.25)" }}
+                    >
+                      "{option.statement}"
+                    </div>
+                  </div>
+                ))}
               </div>
               <div className="mt-6 flex flex-wrap gap-3 justify-center">
                 <BigButton
@@ -119,19 +184,6 @@ function TruthLie() {
                   {revealed ? "🙈 정답 숨기기" : "👀 정답 공개"}
                 </BigButton>
               </div>
-              {revealed && (
-                <motion.div
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className={`mt-6 inline-block px-8 py-4 rounded-2xl font-display text-6xl ${
-                    current.answer === "진실"
-                      ? "bg-success text-success-foreground"
-                      : "bg-destructive text-destructive-foreground"
-                  }`}
-                >
-                  {current.answer === "진실" ? "✅ 진실" : "❌ 거짓"}
-                </motion.div>
-              )}
             </motion.div>
           )}
         </AnimatePresence>

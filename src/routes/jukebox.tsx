@@ -3,7 +3,6 @@ import { useMemo, useState } from "react";
 import { GameHeader } from "@/components/GameHeader";
 import { BigButton } from "@/components/BigButton";
 import { ResultsPanel } from "@/components/ResultsPanel";
-import { TeamPicker } from "@/components/TeamPicker";
 import { SlotReveal } from "@/components/SlotReveal";
 import { useGameStore } from "@/store/useGameStore";
 import { SONGS, type Song } from "@/data/songs";
@@ -23,26 +22,24 @@ function Jukebox() {
   const counts = useGameStore((s) => s.correctCounts.jukebox);
   const recordCorrect = useGameStore((s) => s.recordCorrect);
   const teams = useGameStore((s) => s.teams);
-  const [team, setTeam] = useState<TeamId | null>(null);
   const [round, setRound] = useState(1);
   const [current, setCurrent] = useState<Song | null>(null);
   const [revealed, setRevealed] = useState(false);
 
   const remaining = useMemo(() => SONGS.filter((s) => !used.includes(s.id)), [used]);
 
-  const step = !team ? 0 : !current ? 1 : !revealed ? 2 : 3;
+  const step = !current ? 0 : !revealed ? 1 : 2;
 
   const draw = () => {
-    if (!team) return toast.error("먼저 참여 팀을 선택하세요.");
     if (!remaining.length) return toast.error("남은 노래가 없습니다. 사용 목록을 초기화해 주세요.");
     const pick = remaining[Math.floor(Math.random() * remaining.length)];
     setCurrent(pick);
     setRevealed(false);
-    void markUsed("song", pick.id, team);
+    void markUsed("song", pick.id);
   };
 
-  const correct = () => {
-    if (!team || !current) return;
+  const correct = (team: TeamId) => {
+    if (!current) return;
     void recordCorrect("jukebox", team, "주크박스 정답 +1");
     toast.success(`${teams.find((t) => t.id === team)!.name} 정답!`);
     setRound((r) => r + 1);
@@ -51,8 +48,8 @@ function Jukebox() {
   };
 
   const fail = () => {
-    if (!team || !current) return;
-    toast(`${teams.find((t) => t.id === team)!.name} 실패`);
+    if (!current) return;
+    toast("정답 없이 다음 곡으로 넘어갑니다.");
     setRound((r) => r + 1);
     setCurrent(null);
     setRevealed(false);
@@ -73,19 +70,18 @@ function Jukebox() {
             🎧 게임 1
           </span>
         }
-        steps={["팀 선택", "노래 뽑기", "정답 공개", "결과 입력"]}
+        steps={["노래 뽑기", "정답 공개", "정답 팀 입력"]}
         currentStep={step}
         rules={
           <ul className="list-disc pl-5 space-y-1">
-            <li>팀별로 순서대로 진행합니다.</li>
+            <li>팀 선택 없이 바로 노래를 뽑습니다.</li>
             <li>연도와 장르 힌트만 보고 노래 제목을 맞힙니다.</li>
             <li>유튜브 버튼은 현재 뽑힌 노래의 정확한 검색 결과를 새 탭으로 엽니다.</li>
+            <li>정답이 나오면 맞힌 팀 버튼을 눌러 즉시 +1점을 반영합니다.</li>
             <li>맞힌 개수와 순위 점수를 함께 반영해 최종 점수를 계산합니다.</li>
           </ul>
         }
       />
-
-      <TeamPicker value={team} onChange={setTeam} label="현재 참여 팀" />
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 rounded-3xl bg-card border-2 border-border p-8 space-y-6">
@@ -109,7 +105,7 @@ function Jukebox() {
             size="xl"
             className="w-full animate-pulse-glow"
             onClick={draw}
-            disabled={!team || !!current}
+            disabled={!!current}
           >
             🎰 랜덤 노래 뽑기
           </BigButton>
@@ -176,12 +172,26 @@ function Jukebox() {
                   )}
                 </AnimatePresence>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <BigButton variant="success" size="lg" onClick={correct}>
-                    맞힘 +1
-                  </BigButton>
-                  <BigButton variant="danger" size="lg" onClick={fail}>
-                    실패
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-sm font-bold text-muted-foreground mb-2 uppercase tracking-wider">
+                      정답 팀 선택
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {teams.map((t) => (
+                        <BigButton
+                          key={t.id}
+                          variant="success"
+                          size="lg"
+                          onClick={() => correct(t.id)}
+                        >
+                          {t.emoji} {t.name}
+                        </BigButton>
+                      ))}
+                    </div>
+                  </div>
+                  <BigButton variant="danger" size="lg" className="w-full" onClick={fail}>
+                    정답 없음 / 다음 곡
                   </BigButton>
                 </div>
               </motion.div>
