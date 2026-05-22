@@ -28,12 +28,12 @@ function createRound(question: TruthLiePair): TruthLieRound {
   const trueOption: TruthLieOption = {
     label: "A",
     statement: question.trueStatement,
-    answer: "진실",
+    answer: question.trueAnswer ?? "진실",
   };
   const falseOption: TruthLieOption = {
     label: "B",
     statement: question.falseStatement,
-    answer: "거짓",
+    answer: question.falseAnswer ?? "거짓",
   };
 
   if (Math.random() < 0.5) {

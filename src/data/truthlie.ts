@@ -3,6 +3,8 @@ export interface TruthLiePair {
   person: string;
   trueStatement: string;
   falseStatement: string;
+  trueAnswer?: "진실" | "거짓";
+  falseAnswer?: "진실" | "거짓";
 }
 
 export const TRUTH_LIES: TruthLiePair[] = [
@@ -33,8 +35,10 @@ export const TRUTH_LIES: TruthLiePair[] = [
   {
     id: 205,
     person: "조승민",
-    trueStatement: "나는 여자친구한테 테토다.",
-    falseStatement: "나는 요리 마스터다.",
+    trueStatement: "어릴 때 꿈이 유치원 선생님이었다.",
+    falseStatement: "편의점에서 계산 안 하고 나가다가 잡힌 적 있다.",
+    trueAnswer: "거짓",
+    falseAnswer: "거짓",
   },
   {
     id: 206,

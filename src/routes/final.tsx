@@ -5,6 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { BigButton } from "@/components/BigButton";
 
+const CHINBA_WINNERS = [
+  { rank: "1등", team: "5팀", tone: "text-accent", border: "border-accent", bg: "bg-accent/10" },
+  { rank: "2등", team: "3팀", tone: "text-primary", border: "border-primary", bg: "bg-primary/10" },
+] as const;
+
 export const Route = createFileRoute("/final")({
   head: () => ({
     meta: [
@@ -231,7 +236,7 @@ function Final() {
                 className="mt-8 animate-pulse-glow"
                 onClick={() => startCountdown("chinbaReveal")}
               >
-                친해지길 바래 1등팀 발표
+                친해지길 바래 수상팀 발표
               </BigButton>
             </div>
           </motion.div>
@@ -285,7 +290,7 @@ function Final() {
                   className="text-display text-7xl md:text-[170px] mt-4 leading-none"
                   style={{ textShadow: "0 0 60px var(--primary)" }}
                 >
-                  1등팀 발표
+                  수상팀 발표
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, y: 24 }}
@@ -294,10 +299,22 @@ function Final() {
                   className="mt-10 rounded-2xl border-2 border-accent bg-accent/10 p-8"
                 >
                   <div className="font-display text-5xl md:text-7xl text-accent animate-shake">
-                    두구두구두구...
+                    축하합니다!
                   </div>
-                  <div className="mt-5 text-xl md:text-2xl text-foreground/85">
-                    친바 1등팀은 현장 집계 후 이 화면에서 발표하면 됩니다.
+                  <div className="mt-8 grid md:grid-cols-2 gap-4">
+                    {CHINBA_WINNERS.map((winner) => (
+                      <div
+                        key={winner.rank}
+                        className={`rounded-2xl border-2 ${winner.border} ${winner.bg} p-6`}
+                      >
+                        <div className={`font-display text-4xl md:text-5xl ${winner.tone}`}>
+                          {winner.rank}
+                        </div>
+                        <div className="mt-3 text-display text-7xl md:text-8xl leading-none">
+                          {winner.team}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </motion.div>
               </div>
